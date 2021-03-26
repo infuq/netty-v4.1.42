@@ -187,12 +187,16 @@ import io.netty.handler.codec.serialization.ObjectDecoder;
 public class LengthFieldBasedFrameDecoder extends ByteToMessageDecoder {
 
     private final ByteOrder byteOrder;
+
     private final int maxFrameLength;
+
     private final int lengthFieldOffset;
     private final int lengthFieldLength;
-    private final int lengthFieldEndOffset;
     private final int lengthAdjustment;
     private final int initialBytesToStrip;
+
+    private final int lengthFieldEndOffset;
+
     private final boolean failFast;
     private boolean discardingTooLongFrame;
     private long tooLongFrameLength;
@@ -321,16 +325,19 @@ public class LengthFieldBasedFrameDecoder extends ByteToMessageDecoder {
 
         this.byteOrder = byteOrder;
         this.maxFrameLength = maxFrameLength;
+
         this.lengthFieldOffset = lengthFieldOffset;
         this.lengthFieldLength = lengthFieldLength;
-        this.lengthAdjustment = lengthAdjustment;
         lengthFieldEndOffset = lengthFieldOffset + lengthFieldLength;
+
+        this.lengthAdjustment = lengthAdjustment;
         this.initialBytesToStrip = initialBytesToStrip;
         this.failFast = failFast;
     }
 
     @Override
     protected final void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+        // 解码
         Object decoded = decode(ctx, in);
         if (decoded != null) {
             out.add(decoded);
@@ -348,6 +355,7 @@ public class LengthFieldBasedFrameDecoder extends ByteToMessageDecoder {
     }
 
     private static void failOnNegativeLengthField(ByteBuf in, long frameLength, int lengthFieldEndOffset) {
+        // 跳过无效数据
         in.skipBytes(lengthFieldEndOffset);
         throw new CorruptedFrameException(
            "negative pre-adjustment length field: " + frameLength);
@@ -356,6 +364,7 @@ public class LengthFieldBasedFrameDecoder extends ByteToMessageDecoder {
     private static void failOnFrameLengthLessThanLengthFieldEndOffset(ByteBuf in,
                                                                       long frameLength,
                                                                       int lengthFieldEndOffset) {
+        // 跳过无效数据
         in.skipBytes(lengthFieldEndOffset);
         throw new CorruptedFrameException(
            "Adjusted frame length (" + frameLength + ") is less " +
@@ -366,13 +375,14 @@ public class LengthFieldBasedFrameDecoder extends ByteToMessageDecoder {
         long discard = frameLength - in.readableBytes();
         tooLongFrameLength = frameLength;
 
+        // 小于0 表明 frameLength < in.readableBytes() 即可读的字节足够跳过了, 直接跳过
         if (discard < 0) {
             // buffer contains more bytes then the frameLength so we can discard all now
             in.skipBytes((int) frameLength);
-        } else {
+        } else { // 表明 frameLength > in.readableBytes()  即目前可读的字节还不够一个帧的长度
             // Enter the discard mode and discard everything received so far.
             discardingTooLongFrame = true;
-            bytesToDiscard = discard;
+            bytesToDiscard = discard;// 因为要跳过一个帧的长度, 既然不够的话, 记录还‘欠’多少字节, 等下次够的时候, 再继续跳过.
             in.skipBytes(in.readableBytes());
         }
         failIfNecessary(true);
@@ -396,44 +406,62 @@ public class LengthFieldBasedFrameDecoder extends ByteToMessageDecoder {
      *                          be created.
      */
     protected Object decode(ChannelHandlerContext ctx, ByteBuf in) throws Exception {
+        // 由于整个帧的长度 frameLength 大于 设定的maxFrameLength, 是需要跳过这个无效帧的.
+        // 之前已经跳过了一部分数据, 由于之前不够跳过, 现在又读取到了数据, 那么需要继续跳过剩下'欠'的数据
         if (discardingTooLongFrame) {
             discardingTooLongFrame(in);
         }
 
+        // 在构造函数中定义了  lengthFieldEndOffset = lengthFieldOffset + lengthFieldLength
+        // 它的意思是目前可以从网络中读取的实际字节数(in.readableBytes()) 小于 lengthFieldEndOffset , 无法处理 直接返回, 需要等待更多的数据.
         if (in.readableBytes() < lengthFieldEndOffset) {
             return null;
         }
 
+        // in.readerIndex() 表示读取上一个完整数据的最后下标
         int actualLengthFieldOffset = in.readerIndex() + lengthFieldOffset;
+        // frameLength 表示获取没有调整前的数据帧长度 .  后面的逻辑要使用lengthAdjustment属性调整成真实的数据帧长度
         long frameLength = getUnadjustedFrameLength(in, actualLengthFieldOffset, lengthFieldLength, byteOrder);
 
+
+        // 如果读取到的frameLength 小于 0, 说明此数据有问题, 抛出异常
         if (frameLength < 0) {
             failOnNegativeLengthField(in, frameLength, lengthFieldEndOffset);
         }
 
+        // 调整frameLength长度  frameLength = frameLength + lengthAdjustment + lengthFieldEndOffset
+        // frameLength + lengthAdjustment 表示真实数据的长度
+        // 即这里的frameLength 就是整个数据的长度(包括真实数据).
         frameLength += lengthAdjustment + lengthFieldEndOffset;
 
+        // 如果frameLength < lengthFieldEndOffset  那只能说明在上面的计算过程中, frameLength + lengthAdjustment < 0 了.
+        // frameLength + lengthAdjustment 表示真实数据的长度, 数据的长度怎么会小于0呢   因此抛异常.
         if (frameLength < lengthFieldEndOffset) {
             failOnFrameLengthLessThanLengthFieldEndOffset(in, frameLength, lengthFieldEndOffset);
         }
 
+        // 如果整个数据的长度大于设定的最大值. 那么认为这是无效数据, 需要跳过这个无效数据
         if (frameLength > maxFrameLength) {
+            // 跳过一个frameLength长度的数据
             exceededFrameLength(in, frameLength);
             return null;
         }
 
         // never overflows because it's less than maxFrameLength
         int frameLengthInt = (int) frameLength;
+        // 表示目前可读的数据还不够一个帧, 那么直接返回
         if (in.readableBytes() < frameLengthInt) {
             return null;
         }
 
+        // 比如一个即将要读取的帧长度=10,  可是initialBytesToStrip = 12, 跳过的字节比要读取的字节还大,  读取的字节还不够跳过的, 有问题   直接抛异常
         if (initialBytesToStrip > frameLengthInt) {
             failOnFrameLengthLessThanInitialBytesToStrip(in, frameLength, initialBytesToStrip);
         }
         in.skipBytes(initialBytesToStrip);
 
         // extract frame
+        // 读取实际有意义的业务数据
         int readerIndex = in.readerIndex();
         int actualFrameLength = frameLengthInt - initialBytesToStrip;
         ByteBuf frame = extractFrame(ctx, in, readerIndex, actualFrameLength);
@@ -462,10 +490,12 @@ public class LengthFieldBasedFrameDecoder extends ByteToMessageDecoder {
         case 3:
             frameLength = buf.getUnsignedMedium(offset);
             break;
-        case 4:
+        case 4:// 因为整型占用4个字节, 因此这里就会调用针对整型的方法
+            // 意思就是从offset偏移位置读取一个Int值
             frameLength = buf.getUnsignedInt(offset);
             break;
-        case 8:
+        case 8:// 因为Long类型占用8个字节, 因此这里就会调用针对Long类型的方法
+            // 意思就是从offset偏移位置读取一个Long值
             frameLength = buf.getLong(offset);
             break;
         default:
