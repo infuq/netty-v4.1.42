@@ -148,10 +148,10 @@ final class PoolChunk<T> implements PoolChunkMetric {
         this.pageSize = pageSize;
         this.pageShifts = pageShifts;
         this.maxOrder = maxOrder;
-        this.chunkSize = chunkSize;
+        this.chunkSize = chunkSize;// = 16M
         this.offset = offset;
-        unusable = (byte) (maxOrder + 1);
-        log2ChunkSize = log2(chunkSize);
+        unusable = (byte) (maxOrder + 1);// = 12
+        log2ChunkSize = log2(chunkSize);// = 24
         subpageOverflowMask = ~(pageSize - 1);
         freeBytes = chunkSize;
 
@@ -306,8 +306,7 @@ final class PoolChunk<T> implements PoolChunkMetric {
             }
         }
         byte value = value(id);
-        assert value == d && (id & initial) == 1 << d : String.format("val = %d, id & initial = %d, d = %d",
-                value, id & initial, d);
+        assert value == d && (id & initial) == 1 << d : String.format("val = %d, id & initial = %d, d = %d", value, id & initial, d);
         setValue(id, unusable); // mark as unusable
         updateParentsAlloc(id);
         return id;
@@ -320,7 +319,9 @@ final class PoolChunk<T> implements PoolChunkMetric {
      * @return index in memoryMap
      */
     private long allocateRun(int normCapacity) {
+        // (log2(normCapacity) - pageShifts) 计算出来的是当前请求所在层距离最底层的距离.   用最大层maxOrder 减去 距离层 就是所在的层
         int d = maxOrder - (log2(normCapacity) - pageShifts);
+
         int id = allocateNode(d);
         if (id < 0) {
             return id;
