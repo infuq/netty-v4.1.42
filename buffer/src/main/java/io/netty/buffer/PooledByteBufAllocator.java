@@ -245,6 +245,7 @@ public class PooledByteBufAllocator extends AbstractByteBufAllocator implements 
                     + directMemoryCacheAlignment + " (expected: power of two)");
         }
 
+        // = 13                      00000000000000000010000000000000 = 8192             1的右边有多少个0
         int pageShifts = validateAndCalculatePageShifts(pageSize);
 
         if (nHeapArena > 0) {
@@ -295,6 +296,9 @@ public class PooledByteBufAllocator extends AbstractByteBufAllocator implements 
         }
 
         // Logarithm base 2. At this point we know that pageSize is a power of two.
+        // pageSize = 8192
+        // 32 - 1 - 18
+        // 整型int 占32位
         return Integer.SIZE - 1 - Integer.numberOfLeadingZeros(pageSize);
     }
 
