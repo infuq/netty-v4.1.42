@@ -53,7 +53,7 @@ public class PooledByteBufAllocator extends AbstractByteBufAllocator implements 
     private static final int DEFAULT_DIRECT_MEMORY_CACHE_ALIGNMENT;
     static final int DEFAULT_MAX_CACHED_BYTEBUFFERS_PER_CHUNK;
 
-    private static final int MIN_PAGE_SIZE = 4096;
+    private static final int MIN_PAGE_SIZE = 4096;// = 4K
     private static final int MAX_CHUNK_SIZE = (int) (((long) Integer.MAX_VALUE + 1) / 2);
 
     private final Runnable trimTask = new Runnable() {
@@ -64,15 +64,20 @@ public class PooledByteBufAllocator extends AbstractByteBufAllocator implements 
     };
 
     static {
+
+
         int defaultPageSize = SystemPropertyUtil.getInt("io.netty.allocator.pageSize", 8192);
         Throwable pageSizeFallbackCause = null;
         try {
             validateAndCalculatePageShifts(defaultPageSize);
         } catch (Throwable t) {
             pageSizeFallbackCause = t;
+            // 如果配置的pageSize大小 <4096 或者不是2^n , 那么会将pageSize=8192
             defaultPageSize = 8192;
         }
         DEFAULT_PAGE_SIZE = defaultPageSize;
+
+
 
         int defaultMaxOrder = SystemPropertyUtil.getInt("io.netty.allocator.maxOrder", 11);
         Throwable maxOrderFallbackCause = null;
@@ -80,9 +85,13 @@ public class PooledByteBufAllocator extends AbstractByteBufAllocator implements 
             validateAndCalculateChunkSize(DEFAULT_PAGE_SIZE, defaultMaxOrder);
         } catch (Throwable t) {
             maxOrderFallbackCause = t;
+            // 如果配置的maxOrder大小 >14 , 那么会将maxOrder=11
+            // 如果配置的maxOrder大小 <0 , 虽然maxOrder=负数 , 但是会在下面的流程中报错
             defaultMaxOrder = 11;
         }
         DEFAULT_MAX_ORDER = defaultMaxOrder;
+
+
 
         // Determine reasonable default for nHeapArena and nDirectArena.
         // Assuming each arena has 3 chunks, the pool should not consume more than 50% of max memory.
@@ -96,19 +105,18 @@ public class PooledByteBufAllocator extends AbstractByteBufAllocator implements 
          * See https://github.com/netty/netty/issues/3888.
          */
         final int defaultMinNumArena = NettyRuntime.availableProcessors() * 2;
+
+        // 如果配置的DEFAULT_MAX_ORDER = 负数 , 那么 defaultChunkSize = 0 , 会在下面报错 Caused by: java.lang.ArithmeticException: / by zero
         final int defaultChunkSize = DEFAULT_PAGE_SIZE << DEFAULT_MAX_ORDER;
         DEFAULT_NUM_HEAP_ARENA = Math.max(0,
                 SystemPropertyUtil.getInt(
                         "io.netty.allocator.numHeapArenas",
-                        (int) Math.min(
-                                defaultMinNumArena,
-                                runtime.maxMemory() / defaultChunkSize / 2 / 3)));
+                        (int) Math.min(defaultMinNumArena, runtime.maxMemory() / defaultChunkSize / 2 / 3  )  )  );
         DEFAULT_NUM_DIRECT_ARENA = Math.max(0,
                 SystemPropertyUtil.getInt(
                         "io.netty.allocator.numDirectArenas",
                         (int) Math.min(
-                                defaultMinNumArena,
-                                PlatformDependent.maxDirectMemory() / defaultChunkSize / 2 / 3)));
+                                defaultMinNumArena, PlatformDependent.maxDirectMemory() / defaultChunkSize / 2 / 3  )  )  );
 
         // cache sizes
         DEFAULT_TINY_CACHE_SIZE = SystemPropertyUtil.getInt("io.netty.allocator.tinyCacheSize", 512);
@@ -117,26 +125,20 @@ public class PooledByteBufAllocator extends AbstractByteBufAllocator implements 
 
         // 32 kb is the default maximum capacity of the cached buffer. Similar to what is explained in
         // 'Scalable memory allocation using jemalloc'
-        DEFAULT_MAX_CACHED_BUFFER_CAPACITY = SystemPropertyUtil.getInt(
-                "io.netty.allocator.maxCachedBufferCapacity", 32 * 1024);
+        DEFAULT_MAX_CACHED_BUFFER_CAPACITY = SystemPropertyUtil.getInt("io.netty.allocator.maxCachedBufferCapacity", 32 * 1024);
 
         // the number of threshold of allocations when cached entries will be freed up if not frequently used
-        DEFAULT_CACHE_TRIM_INTERVAL = SystemPropertyUtil.getInt(
-                "io.netty.allocator.cacheTrimInterval", 8192);
+        DEFAULT_CACHE_TRIM_INTERVAL = SystemPropertyUtil.getInt("io.netty.allocator.cacheTrimInterval", 8192);
 
-        DEFAULT_CACHE_TRIM_INTERVAL_MILLIS = SystemPropertyUtil.getLong(
-                "io.netty.allocation.cacheTrimIntervalMillis", 0);
+        DEFAULT_CACHE_TRIM_INTERVAL_MILLIS = SystemPropertyUtil.getLong("io.netty.allocation.cacheTrimIntervalMillis", 0);
 
-        DEFAULT_USE_CACHE_FOR_ALL_THREADS = SystemPropertyUtil.getBoolean(
-                "io.netty.allocator.useCacheForAllThreads", true);
+        DEFAULT_USE_CACHE_FOR_ALL_THREADS = SystemPropertyUtil.getBoolean("io.netty.allocator.useCacheForAllThreads", true);
 
-        DEFAULT_DIRECT_MEMORY_CACHE_ALIGNMENT = SystemPropertyUtil.getInt(
-                "io.netty.allocator.directMemoryCacheAlignment", 0);
+        DEFAULT_DIRECT_MEMORY_CACHE_ALIGNMENT = SystemPropertyUtil.getInt("io.netty.allocator.directMemoryCacheAlignment", 0);
 
         // Use 1023 by default as we use an ArrayDeque as backing storage which will then allocate an internal array
         // of 1024 elements. Otherwise we would allocate 2048 and only use 1024 which is wasteful.
-        DEFAULT_MAX_CACHED_BYTEBUFFERS_PER_CHUNK = SystemPropertyUtil.getInt(
-                "io.netty.allocator.maxCachedByteBuffersPerChunk", 1023);
+        DEFAULT_MAX_CACHED_BYTEBUFFERS_PER_CHUNK = SystemPropertyUtil.getInt("io.netty.allocator.maxCachedByteBuffersPerChunk", 1023);
 
         if (logger.isDebugEnabled()) {
             logger.debug("-Dio.netty.allocator.numHeapArenas: {}", DEFAULT_NUM_HEAP_ARENA);
@@ -161,6 +163,7 @@ public class PooledByteBufAllocator extends AbstractByteBufAllocator implements 
             logger.debug("-Dio.netty.allocator.useCacheForAllThreads: {}", DEFAULT_USE_CACHE_FOR_ALL_THREADS);
             logger.debug("-Dio.netty.allocator.maxCachedByteBuffersPerChunk: {}", DEFAULT_MAX_CACHED_BYTEBUFFERS_PER_CHUNK);
         }
+
     }
 
     public static final PooledByteBufAllocator DEFAULT = new PooledByteBufAllocator(PlatformDependent.directBufferPreferred());
@@ -182,7 +185,12 @@ public class PooledByteBufAllocator extends AbstractByteBufAllocator implements 
 
     @SuppressWarnings("deprecation")
     public PooledByteBufAllocator(boolean preferDirect) {
+
+        // 在静态代码块中根据手动配置或者默认值设置了DEFAULT_PAGE_SIZE 和 DEFAULT_MAX_ORDER
+        // 再根据DEFAULT_PAGE_SIZE 和 DEFAULT_MAX_ORDER 计算出DEFAULT_NUM_HEAP_ARENA 和 DEFAULT_NUM_DIRECT_ARENA
+        // 当然也会根据DEFAULT_PAGE_SIZE 和 DEFAULT_MAX_ORDER 计算出chunkSize大小
         this(preferDirect, DEFAULT_NUM_HEAP_ARENA, DEFAULT_NUM_DIRECT_ARENA, DEFAULT_PAGE_SIZE, DEFAULT_MAX_ORDER);
+
     }
 
     @SuppressWarnings("deprecation")
@@ -237,7 +245,7 @@ public class PooledByteBufAllocator extends AbstractByteBufAllocator implements 
         this.tinyCacheSize = tinyCacheSize;
         this.smallCacheSize = smallCacheSize;
         this.normalCacheSize = normalCacheSize;
-        chunkSize = validateAndCalculateChunkSize(pageSize, maxOrder);
+        chunkSize = validateAndCalculateChunkSize(pageSize, maxOrder);// 16777216 = 16M   根据pageSize 和 maxOrder 计算chunkSize
 
         checkPositiveOrZero(nHeapArena, "nHeapArena");
         checkPositiveOrZero(nDirectArena, "nDirectArena");
@@ -319,6 +327,9 @@ public class PooledByteBufAllocator extends AbstractByteBufAllocator implements 
             throw new IllegalArgumentException("maxOrder: " + maxOrder + " (expected: 0-14)");
         }
 
+        // pageSize 向左移动 maxOrder 次, 得到 chunkSize
+        // 8192(10000000000000) 向左移动 11 次, 得到 16M
+
         // Ensure the resulting chunkSize does not overflow.
         int chunkSize = pageSize;
         for (int i = maxOrder; i > 0; i --) {
@@ -326,6 +337,8 @@ public class PooledByteBufAllocator extends AbstractByteBufAllocator implements 
                 throw new IllegalArgumentException(String.format(
                         "pageSize (%d) << maxOrder (%d) must not exceed %d", pageSize, maxOrder, MAX_CHUNK_SIZE));
             }
+            //                  10000000000000
+            //                  1000000000000000000000000
             chunkSize <<= 1;
         }
         return chunkSize;

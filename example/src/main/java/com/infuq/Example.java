@@ -11,9 +11,10 @@ public class Example {
 
         PooledByteBufAllocator allocator = PooledByteBufAllocator.DEFAULT;
 
-        allocator.directBuffer(32 * 1024);//32K
 
         allocator.directBuffer(32 * 1024);//32K
+
+//        allocator.directBuffer(32 * 1024);//32K
 
 //        allocator.directBuffer(2 * 1024);//2K
 
