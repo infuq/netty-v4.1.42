@@ -53,6 +53,8 @@ final class PoolSubpage<T> implements PoolSubpageMetric {
         this.runOffset = runOffset;
         this.pageSize = pageSize;
         bitmap = new long[pageSize >>> 10]; // pageSize / 16 / 64
+
+        // 添加到池中
         init(head, elemSize);
     }
 

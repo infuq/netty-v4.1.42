@@ -148,7 +148,9 @@ abstract class PoolArena<T> implements PoolArenaMetric {
     abstract boolean isDirect();
 
     PooledByteBuf<T> allocate(PoolThreadCache cache, int reqCapacity, int maxCapacity) {
+        // 从对象池中获取一个ByteBuf
         PooledByteBuf<T> buf = newByteBuf(maxCapacity);
+        // 分配
         allocate(cache, buf, reqCapacity);
         return buf;
     }
@@ -178,13 +180,15 @@ abstract class PoolArena<T> implements PoolArenaMetric {
     }
 
     private void allocate(PoolThreadCache cache, PooledByteBuf<T> buf, final int reqCapacity) {
+        // 规格化
         final int normCapacity = normalizeCapacity(reqCapacity);
+
         if (isTinyOrSmall(normCapacity)) { // capacity < pageSize
             int tableIdx;
             PoolSubpage<T>[] table;
             boolean tiny = isTiny(normCapacity);
             if (tiny) { // < 512
-                // 从缓存里分配内存, 不需要加锁
+                // 从Tiny缓存里分配内存, 不需要加锁
                 if (cache.allocateTiny(this, buf, reqCapacity, normCapacity)) {
                     // was able to allocate out of the cache so move on
                     return;
@@ -192,6 +196,7 @@ abstract class PoolArena<T> implements PoolArenaMetric {
                 tableIdx = tinyIdx(normCapacity);
                 table = tinySubpagePools;
             } else {
+                // 从Small缓存里分配内存, 不需要加锁
                 if (cache.allocateSmall(this, buf, reqCapacity, normCapacity)) {
                     // was able to allocate out of the cache so move on
                     return;
@@ -206,11 +211,13 @@ abstract class PoolArena<T> implements PoolArenaMetric {
              * Synchronize on the head. This is needed as {@link PoolChunk#allocateSubpage(int)} and
              * {@link PoolChunk#free(long)} may modify the doubly linked list as well.
              */
-            synchronized (head) {// 加锁
+            // 从SubpagePool里分配内存, 需要加锁
+            synchronized (head) {
                 final PoolSubpage<T> s = head.next;
                 if (s != head) {
                     assert s.doNotDestroy && s.elemSize == normCapacity;
-                    long handle = s.allocate();// 分配
+                    // 分配
+                    long handle = s.allocate();
                     assert handle >= 0;
                     s.chunk.initBufWithSubpage(buf, null, handle, reqCapacity);
                     incTinySmallAllocation(tiny);
@@ -224,16 +231,22 @@ abstract class PoolArena<T> implements PoolArenaMetric {
             incTinySmallAllocation(tiny);
             return;
         }
+
+
+
         if (normCapacity <= chunkSize) {
+            // 从Normal缓存里分配内存, 不需要加锁
             if (cache.allocateNormal(this, buf, reqCapacity, normCapacity)) {
                 // was able to allocate out of the cache so move on
                 return;
             }
+            // 加锁 这把锁是this  一把大锁 .  多个线程共享同一个Arena时, 如果同时执行到此处, 那么就会被同步
             synchronized (this) {
                 allocateNormal(buf, reqCapacity, normCapacity);
                 ++allocationsNormal;
             }
         } else {
+            // Huge
             // Huge allocations are never served via the cache so just call allocateHuge
             allocateHuge(buf, reqCapacity);
         }

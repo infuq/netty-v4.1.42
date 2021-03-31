@@ -225,8 +225,10 @@ final class PoolChunk<T> implements PoolChunkMetric {
     boolean allocate(PooledByteBuf<T> buf, int reqCapacity, int normCapacity) {
         final long handle;
         if ((normCapacity & subpageOverflowMask) != 0) { // >= pageSize
+            // 申请高于8K的内存
             handle =  allocateRun(normCapacity);
         } else {
+            // 申请低于8K的内存
             handle = allocateSubpage(normCapacity);
         }
 
@@ -288,12 +290,16 @@ final class PoolChunk<T> implements PoolChunkMetric {
      * at depth d
      *
      * @param d depth
-     * @return index in memoryMap
+     * @return index in memoryMap 在memoryMap中的下标
      */
     private int allocateNode(int d) {
+        // 从第一层开始查找
         int id = 1;
         int initial = - (1 << d); // has last d bits = 0 and rest all = 1
+
+        // memoryMap[1]
         byte val = value(id);
+        // 如果第一层的val值大于请求的, 那么表示此Chunk不足够分配请求的空间
         if (val > d) { // unusable
             return -1;
         }
@@ -301,6 +307,7 @@ final class PoolChunk<T> implements PoolChunkMetric {
             id <<= 1;
             val = value(id);
             if (val > d) {
+                // +1   比如 id = 512 , 那么 512^=1 就是 512+1=513的意思
                 id ^= 1;
                 val = value(id);
             }
@@ -308,6 +315,8 @@ final class PoolChunk<T> implements PoolChunkMetric {
         byte value = value(id);
         assert value == d && (id & initial) == 1 << d : String.format("val = %d, id & initial = %d, d = %d", value, id & initial, d);
         setValue(id, unusable); // mark as unusable
+
+        // 更新父节点
         updateParentsAlloc(id);
         return id;
     }
@@ -316,10 +325,11 @@ final class PoolChunk<T> implements PoolChunkMetric {
      * Allocate a run of pages (>=1)
      *
      * @param normCapacity normalized capacity
-     * @return index in memoryMap
+     * @return index in memoryMap  在memoryMap中的下标
      */
     private long allocateRun(int normCapacity) {
-        // (log2(normCapacity) - pageShifts) 计算出来的是当前请求所在层距离最底层的距离.   用最大层maxOrder 减去 距离层 就是所在的层
+        // (log2(normCapacity) - pageShifts) 计算出来的是当前请求所在层距离最底层的距离.
+        // 用最大层maxOrder 减去 '距离层' 就是所在的层
         int d = maxOrder - (log2(normCapacity) - pageShifts);
 
         int id = allocateNode(d);
@@ -406,8 +416,8 @@ final class PoolChunk<T> implements PoolChunkMetric {
         if (bitmapIdx == 0) {
             byte val = value(memoryMapIdx);
             assert val == unusable : String.valueOf(val);
-            buf.init(this, nioBuffer, handle, runOffset(memoryMapIdx) + offset,
-                    reqCapacity, runLength(memoryMapIdx), arena.parent.threadCache());
+            // runOffset(memoryMapIdx) + offset               偏移量
+            buf.init(this, nioBuffer, handle, runOffset(memoryMapIdx) + offset, reqCapacity, runLength(memoryMapIdx), arena.parent.threadCache());
         } else {
             initBufWithSubpage(buf, nioBuffer, handle, bitmapIdx, reqCapacity);
         }
@@ -450,11 +460,15 @@ final class PoolChunk<T> implements PoolChunkMetric {
         return INTEGER_SIZE_MINUS_ONE - Integer.numberOfLeadingZeros(val);
     }
 
+    // 计算下标是id的节点的大小
+    // 比如默认id=512的节点大小是32K
     private int runLength(int id) {
         // represents the size in #bytes supported by node 'id' in the tree
+        //     相等于 1 << ( log2ChunkSize - depth(id) )
         return 1 << log2ChunkSize - depth(id);
     }
 
+    // 计算下标是id的节点的偏移量
     private int runOffset(int id) {
         // represents the 0-based offset in #bytes from start of the byte-array chunk
         int shift = id ^ 1 << depth(id);

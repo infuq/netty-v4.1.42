@@ -8,14 +8,17 @@ public class Example {
 
     public static void main(String[] args) {
 
-        System.out.println(~(8192 - 1));
 
         PooledByteBufAllocator allocator = PooledByteBufAllocator.DEFAULT;
 
 
-        allocator.directBuffer(16);//32K
+        allocator.directBuffer(32 * 1024);//32K
 
         allocator.directBuffer(32 * 1024);//32K
+
+//        allocator.directBuffer(32 * 1024);//32K
+
+        allocator.directBuffer(32);//32B
 
 //        allocator.directBuffer(2 * 1024);//2K
 
