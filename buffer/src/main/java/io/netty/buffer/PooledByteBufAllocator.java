@@ -367,6 +367,7 @@ public class PooledByteBufAllocator extends AbstractByteBufAllocator implements 
 
         final ByteBuf buf;
         if (directArena != null) {
+            // 可能会存在多个线程共享同一个Arena的情况
             logger.info("线程[" + Thread.currentThread().getName() + "]使用的Arena->" + cache.directArena.hashCode());
             buf = directArena.allocate(cache, initialCapacity, maxCapacity);
         } else {
