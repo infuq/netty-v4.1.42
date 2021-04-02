@@ -2,6 +2,7 @@ package com.infuq;
 
 import io.netty.buffer.PooledByteBufAllocator;
 
+import java.util.Arrays;
 import java.util.HashMap;
 
 public class Example {
@@ -9,16 +10,27 @@ public class Example {
     public static void main(String[] args) {
 
 
-        PooledByteBufAllocator allocator = PooledByteBufAllocator.DEFAULT;
+//        PooledByteBufAllocator allocator = PooledByteBufAllocator.DEFAULT;
 
-
-        allocator.directBuffer(32 * 1024);//32K
-
-        allocator.directBuffer(32 * 1024);//32K
 
 //        allocator.directBuffer(32 * 1024);//32K
 
-        allocator.directBuffer(32);//32B
+//        allocator.directBuffer(32 * 1024);//32K
+
+//        allocator.directBuffer(32 * 1024);//32K
+
+//        allocator.directBuffer(32);//32B
+
+        System.out.println(Long.MIN_VALUE);
+        System.out.println((-2 + 999999) / 1000000);//0
+        System.out.println((-1 + 999999) / 1000000);//0
+        System.out.println((0 + 999999) / 1000000);//0
+        System.out.println((1 + 999999) / 1000000);//1
+        System.out.println((2 + 999999) / 1000000);//1
+        System.out.println(7/2);
+
+
+
 
 //        allocator.directBuffer(2 * 1024);//2K
 
