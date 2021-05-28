@@ -57,9 +57,10 @@ public class FastThreadLocal<V> {
         }
 
         try {
-            Object v = threadLocalMap.indexedVariable(variablesToRemoveIndex);
+            Object v = threadLocalMap.indexedVariable(variablesToRemoveIndex); // variablesToRemoveIndex= 0
             if (v != null && v != InternalThreadLocalMap.UNSET) {
                 @SuppressWarnings("unchecked")
+                // 变量v中存储的是当前线程的所有FastThreadLocal
                 Set<FastThreadLocal<?>> variablesToRemove = (Set<FastThreadLocal<?>>) v;
                 FastThreadLocal<?>[] variablesToRemoveArray =
                         variablesToRemove.toArray(new FastThreadLocal[0]);

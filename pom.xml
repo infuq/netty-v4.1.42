@@ -905,7 +905,7 @@
           </execution>
         </executions>
       </plugin>
-      <plugin>
+      <!--<plugin>
         <artifactId>maven-checkstyle-plugin</artifactId>
         <version>3.0.0</version>
         <executions>
@@ -940,7 +940,7 @@
             <version>${netty.build.version}</version>
           </dependency>
         </dependencies>
-      </plugin>
+      </plugin>-->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>xml-maven-plugin</artifactId>
@@ -1371,7 +1371,7 @@
                     <ignore />
                   </action>
                 </pluginExecution>
-                <pluginExecution>
+                <!--<pluginExecution>
                   <pluginExecutionFilter>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-checkstyle-plugin</artifactId>
@@ -1383,7 +1383,7 @@
                   <action>
                     <ignore />
                   </action>
-                </pluginExecution>
+                </pluginExecution>-->
                 <pluginExecution>
                   <pluginExecutionFilter>
                     <groupId>org.apache.maven.plugins</groupId>

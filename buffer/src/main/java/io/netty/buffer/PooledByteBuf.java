@@ -27,7 +27,7 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
 
-abstract class PooledByteBuf<T> extends AbstractReferenceCountedByteBuf {
+public abstract class PooledByteBuf<T> extends AbstractReferenceCountedByteBuf {
 
     private final Recycler.Handle<PooledByteBuf<T>> recyclerHandle;
 
@@ -42,7 +42,7 @@ abstract class PooledByteBuf<T> extends AbstractReferenceCountedByteBuf {
     private ByteBufAllocator allocator;
 
     @SuppressWarnings("unchecked")
-    protected PooledByteBuf(Recycler.Handle<? extends PooledByteBuf<T>> recyclerHandle, int maxCapacity) {
+    public PooledByteBuf(Recycler.Handle<? extends PooledByteBuf<T>> recyclerHandle, int maxCapacity) {
         super(maxCapacity);
         this.recyclerHandle = (Handle<PooledByteBuf<T>>) recyclerHandle;
     }

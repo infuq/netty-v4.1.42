@@ -36,7 +36,6 @@ public class Server {
                             channelPipeline.addLast(new StringEncoder());
                             channelPipeline.addLast(new StringDecoder());
                             channelPipeline.addLast(businessGroup, new ServerHandler());
-
                         }
                     });
 
