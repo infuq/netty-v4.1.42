@@ -645,12 +645,14 @@ public abstract class Recycler<T> {
         }
 
         boolean dropHandle(DefaultHandle<?> handle) {
+            // 1.如果当前handle之前被回收过,那么此次也会被回收
+            // 2.如果当前handle之前没有回收过,那么默认每隔8个回收一个,防止Stack的DefaultHandle[]数组发生爆炸性的增长.
             if (!handle.hasBeenRecycled) {
                 if ((++handleRecycleCount & ratioMask) != 0) {
                     // Drop the object.
                     return true;
                 }
-                handle.hasBeenRecycled = true;
+                handle.hasBeenRecycled = true; // 标记元素被回收
             }
             return false;
         }
