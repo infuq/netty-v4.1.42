@@ -39,7 +39,7 @@ public class Server {
                         }
                     });
 
-            ChannelFuture channelFuture = serverBootstrap.bind("127.0.0.1", 8080).sync();
+            ChannelFuture channelFuture = serverBootstrap.bind("192.168.101.4", 8080).sync();
             channelFuture.channel().closeFuture().sync();
         } finally {
             bossGroup.shutdownGracefully();

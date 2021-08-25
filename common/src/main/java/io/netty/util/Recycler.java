@@ -158,6 +158,7 @@ public abstract class Recycler<T> {
             return newObject((Handle<T>) NOOP_HANDLE);
         }
         Stack<T> stack = threadLocal.get();
+        // Stack中存储DefaultHandle对象
         DefaultHandle<T> handle = stack.pop();
         if (handle == null) {
             handle = stack.newHandle();
@@ -483,6 +484,8 @@ public abstract class Recycler<T> {
         }
 
         // Marked as synchronized to ensure this is serialized.
+        // 1.加锁
+        // 2.头插法
         synchronized void setHead(WeakOrderQueue queue) {
             queue.setNext(head);
             head = queue;
@@ -506,8 +509,8 @@ public abstract class Recycler<T> {
         @SuppressWarnings({ "unchecked", "rawtypes" })
         DefaultHandle<T> pop() {
             int size = this.size;
-            if (size == 0) {
-                if (!scavenge()) {
+            if (size == 0) {// 如果elements中没有可用元素
+                if (!scavenge()) {// 从其他WeakOrderQueue中转移数据到当前stack#elements中
                     return null;
                 }
                 size = this.size;
@@ -588,6 +591,7 @@ public abstract class Recycler<T> {
 
         void push(DefaultHandle<?> item) {
             Thread currentThread = Thread.currentThread();
+            // Stack归属的线程是当前线程
             if (threadRef.get() == currentThread) {
                 // The current Thread is the thread that belongs to the Stack, we can try to push the object now.
                 pushNow(item);
@@ -618,25 +622,32 @@ public abstract class Recycler<T> {
             this.size = size + 1;
         }
 
+        // 1.先将Queue链接到链表上
+        // 2.将item添加到Queue#Link
         private void pushLater(DefaultHandle<?> item, Thread thread) {
             // we don't want to have a ref to the queue as the value in our weak map
             // so we null it out; to ensure there are no races with restoring it later
             // we impose a memory ordering here (no-op on x86)
+
+            // DELAYED_RECYCLED是FastThreadLocal类型, 则每个线程都有一个DELAYED_RECYCLED.
+            // 每个线程会维护 Stack -> WeakOrderQueue 映射关系, 即每个线程会'协助'其他线程存储它的对象.
             Map<Stack<?>, WeakOrderQueue> delayedRecycled = DELAYED_RECYCLED.get();
             WeakOrderQueue queue = delayedRecycled.get(this);
             if (queue == null) {
                 if (delayedRecycled.size() >= maxDelayedQueues) {
                     // Add a dummy queue so we know we should drop the object
+                    // 如果条件满足,则当前线程不会'协助'Stack的归属线程回收它的对象.
                     delayedRecycled.put(this, WeakOrderQueue.DUMMY);
                     return;
                 }
                 // Check if we already reached the maximum number of delayed queues and if we can allocate at all.
+                // 创建queue,同时链接到链表上(会加锁)
                 if ((queue = WeakOrderQueue.allocate(this, thread)) == null) {
                     // drop object
                     return;
                 }
                 delayedRecycled.put(this, queue);
-            } else if (queue == WeakOrderQueue.DUMMY) {
+            } else if (queue == WeakOrderQueue.DUMMY) {// 虽然Stack对应的Queue不为空,但是是个空的Queue(之所以是空,那是因为L367行的原因),则直接返回
                 // drop object
                 return;
             }

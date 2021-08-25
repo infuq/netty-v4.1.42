@@ -12,6 +12,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<String> {
     protected void channelRead0(ChannelHandlerContext ctx, String msg) {
         System.out.println("接收到客户端信息:" + msg);
         ctx.writeAndFlush("\r\nServer " + (count++) + " to Client...\r\n");
+        ctx.flush();
 
     }
 
