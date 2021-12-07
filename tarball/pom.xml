@@ -73,16 +73,7 @@
           </execution>
         </executions>
       </plugin>
-      <!-- Disable checkstyle -->
-      <plugin>
-        <artifactId>maven-checkstyle-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>check-style</id>
-            <phase>none</phase>
-          </execution>
-        </executions>
-      </plugin>
+
       <!-- Do not deploy this module -->
       <plugin>
         <artifactId>maven-deploy-plugin</artifactId>
