@@ -123,10 +123,14 @@ public class FastThreadLocal<V> {
         variablesToRemove.remove(variable);
     }
 
+    // 自己添加的属性
+    private final int _index = 0;//2*128*1024;
+
+
     private final int index;
 
     public FastThreadLocal() {
-        index = InternalThreadLocalMap.nextVariableIndex();
+        index = InternalThreadLocalMap.nextVariableIndex() + _index;
     }
 
     /**
