@@ -17,6 +17,7 @@ package io.netty.channel.nio;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
+import io.netty.buffer.PoolThreadCache;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelConfig;
 import io.netty.channel.ChannelFuture;
@@ -29,7 +30,10 @@ import io.netty.channel.internal.ChannelUtils;
 import io.netty.channel.socket.ChannelInputShutdownEvent;
 import io.netty.channel.socket.ChannelInputShutdownReadComplete;
 import io.netty.channel.socket.SocketChannelConfig;
+import io.netty.util.concurrent.FastThreadLocalThread;
+import io.netty.util.internal.InternalThreadLocalMap;
 import io.netty.util.internal.StringUtil;
+import org.openjdk.jol.info.ClassLayout;
 
 import java.io.IOException;
 import java.nio.channels.SelectableChannel;
@@ -137,52 +141,79 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
             }
             final ChannelPipeline pipeline = pipeline();
             final ByteBufAllocator allocator = config.getAllocator();
+            System.out.println("线程[" + Thread.currentThread().getName() + "]使用分配器->" + allocator.hashCode());
             final RecvByteBufAllocator.Handle allocHandle = recvBufAllocHandle();
             allocHandle.reset(config);
 
             ByteBuf byteBuf = null;
             boolean close = false;
-            try {
-                do {
-                    byteBuf = allocHandle.allocate(allocator);
-                    allocHandle.lastBytesRead(doReadBytes(byteBuf));
-                    if (allocHandle.lastBytesRead() <= 0) {
-                        // nothing was read. release the buffer.
-                        byteBuf.release();
-                        byteBuf = null;
-                        close = allocHandle.lastBytesRead() < 0;
-                        if (close) {
-                            // There is nothing left to read as we received an EOF.
-                            readPending = false;
+
+
+
+            // 测试代码
+//            byteBuf = allocHandle.allocate(allocator);
+//            System.out.println("线程[" + Thread.currentThread().getName() + "]获取的堆外内存对象的布局如下");
+//            System.out.println(ClassLayout.parseInstance(byteBuf).toPrintable());
+
+            boolean mock = 1 == 1;
+            if (mock) {
+                try {
+                    do {
+                        byteBuf = allocHandle.allocate(allocator);
+                        System.out.println(ClassLayout.parseInstance(byteBuf).toPrintable());
+                        allocHandle.lastBytesRead(doReadBytes(byteBuf));
+                        if (allocHandle.lastBytesRead() <= 0) {
+                            // nothing was read. release the buffer.
+                            byteBuf.release();
+                            byteBuf = null;
+                            close = allocHandle.lastBytesRead() < 0;
+                            if (close) {
+                                // There is nothing left to read as we received an EOF.
+                                readPending = false;
+                            }
+                            break;
                         }
-                        break;
+
+                        allocHandle.incMessagesRead(1);
+                        readPending = false;
+                        pipeline.fireChannelRead(byteBuf);
+                        byteBuf = null;
+                    } while (allocHandle.continueReading());
+
+                    allocHandle.readComplete();
+                    pipeline.fireChannelReadComplete();
+
+                    if (close) {
+                        closeOnRead(pipeline);
                     }
-
-                    allocHandle.incMessagesRead(1);
-                    readPending = false;
-                    pipeline.fireChannelRead(byteBuf);
-                    byteBuf = null;
-                } while (allocHandle.continueReading());
-
-                allocHandle.readComplete();
-                pipeline.fireChannelReadComplete();
-
-                if (close) {
-                    closeOnRead(pipeline);
+                } catch (Throwable t) {
+                    handleReadException(pipeline, byteBuf, t, close, allocHandle);
+                } finally {
+                    // Check if there is a readPending which was not processed yet.
+                    // This could be for two reasons:
+                    // * The user called Channel.read() or ChannelHandlerContext.read() in channelRead(...) method
+                    // * The user called Channel.read() or ChannelHandlerContext.read() in channelReadComplete(...) method
+                    //
+                    // See https://github.com/netty/netty/issues/2254
+                    if (!readPending && !config.isAutoRead()) {
+                        removeReadOp();
+                    }
                 }
-            } catch (Throwable t) {
-                handleReadException(pipeline, byteBuf, t, close, allocHandle);
-            } finally {
-                // Check if there is a readPending which was not processed yet.
-                // This could be for two reasons:
-                // * The user called Channel.read() or ChannelHandlerContext.read() in channelRead(...) method
-                // * The user called Channel.read() or ChannelHandlerContext.read() in channelReadComplete(...) method
-                //
-                // See https://github.com/netty/netty/issues/2254
-                if (!readPending && !config.isAutoRead()) {
-                    removeReadOp();
+
+            }
+
+
+
+            FastThreadLocalThread current = (FastThreadLocalThread) Thread.currentThread();
+            InternalThreadLocalMap internalThreadLocalMap = current.threadLocalMap();
+            Object[] indexedVariables = internalThreadLocalMap.getIndexedVariables();
+            for (int i = 0; i < indexedVariables.length; i++) {
+                if (indexedVariables[i] != null && indexedVariables[i] instanceof PoolThreadCache) {
+                    System.out.println("线程[" + Thread.currentThread().getName() + "]中存储PoolThreadCache的下标->" + i);
                 }
             }
+
+
         }
     }
 

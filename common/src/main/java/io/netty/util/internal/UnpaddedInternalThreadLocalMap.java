@@ -55,6 +55,11 @@ class UnpaddedInternalThreadLocalMap {
     // ArrayList-related thread-locals
     ArrayList<Object> arrayList;
 
+    // 自己添加的方法
+    public Object[] getIndexedVariables() {
+        return this.indexedVariables;
+    }
+
     UnpaddedInternalThreadLocalMap(Object[] indexedVariables) {
         this.indexedVariables = indexedVariables;
     }

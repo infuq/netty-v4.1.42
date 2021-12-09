@@ -108,15 +108,15 @@ public class PooledByteBufAllocator extends AbstractByteBufAllocator implements 
 
         // 如果配置的DEFAULT_MAX_ORDER = 负数 , 那么 defaultChunkSize = 0 , 会在下面报错 Caused by: java.lang.ArithmeticException: / by zero
         final int defaultChunkSize = DEFAULT_PAGE_SIZE << DEFAULT_MAX_ORDER;
-        DEFAULT_NUM_HEAP_ARENA = Math.max(0,
+        DEFAULT_NUM_HEAP_ARENA = 6;/* Math.max(0,
                 SystemPropertyUtil.getInt(
                         "io.netty.allocator.numHeapArenas",
-                        (int) Math.min(defaultMinNumArena, runtime.maxMemory() / defaultChunkSize / 2 / 3  )  )  );
-        DEFAULT_NUM_DIRECT_ARENA = Math.max(0,
+                        (int) Math.min(defaultMinNumArena, runtime.maxMemory() / defaultChunkSize / 2 / 3  )  )  );  */
+        DEFAULT_NUM_DIRECT_ARENA = 6; /* Math.max(0,
                 SystemPropertyUtil.getInt(
                         "io.netty.allocator.numDirectArenas",
                         (int) Math.min(
-                                defaultMinNumArena, PlatformDependent.maxDirectMemory() / defaultChunkSize / 2 / 3  )  )  );
+                                defaultMinNumArena, PlatformDependent.maxDirectMemory() / defaultChunkSize / 2 / 3  )  )  ); */
 
         // cache sizes
         DEFAULT_TINY_CACHE_SIZE = SystemPropertyUtil.getInt("io.netty.allocator.tinyCacheSize", 512);

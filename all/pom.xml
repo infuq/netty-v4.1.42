@@ -719,16 +719,7 @@
         </executions>
       </plugin>
 
-      <!-- Disable checkstyle -->
-      <plugin>
-        <artifactId>maven-checkstyle-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>check-style</id>
-            <phase>none</phase>
-          </execution>
-        </executions>
-      </plugin>
+
 
       <!-- Disable all plugin executions configured by jar packaging -->
       <plugin>

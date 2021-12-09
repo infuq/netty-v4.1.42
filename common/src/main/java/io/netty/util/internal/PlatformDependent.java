@@ -1076,6 +1076,10 @@ public final class PlatformDependent {
                     !vmName.startsWith("eclipse openj9")) {
                 // Try to get from sun.misc.VM.maxDirectMemory() which should be most accurate.
                 Class<?> vmClass = Class.forName("sun.misc.VM", true, systemClassLoader);
+
+
+                // -XX:MaxDirectMemorySize=38M
+                // 获取直接内存大小
                 Method m = vmClass.getDeclaredMethod("maxDirectMemory");
                 maxDirectMemory = ((Number) m.invoke(null)).longValue();
             }
