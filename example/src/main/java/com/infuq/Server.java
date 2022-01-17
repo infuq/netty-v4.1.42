@@ -12,6 +12,7 @@ import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import org.openjdk.jol.info.ClassLayout;
 import org.openjdk.jol.vm.VM;
+import sun.nio.ch.DirectBuffer;
 
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
@@ -48,9 +49,10 @@ public class Server {
         // 查看元空间地址
 //        System.out.println(ClassLayout.parseInstance(serverBootstrap).toPrintable());
 
-        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(31 * 1024 * 1024);
-//        System.out.println(ClassLayout.parseInstance(byteBuffer).toPrintable());
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(30 * 1024 * 1024);
+        ((DirectBuffer)byteBuffer).cleaner().clean();
 
+        System.out.println(ClassLayout.parseInstance(byteBuffer).toPrintable());
 
         try {
 
@@ -68,15 +70,12 @@ public class Server {
                         }
                     });
 
-            ChannelFuture channelFuture = serverBootstrap.bind("192.168.101.4", 8080).sync();
+            ChannelFuture channelFuture = serverBootstrap.bind("127.0.0.1", 8080).sync();
             channelFuture.channel().closeFuture().sync();
         } finally {
             bossGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();
         }
-
-
-
 
 
 

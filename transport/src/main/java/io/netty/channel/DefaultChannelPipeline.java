@@ -1340,6 +1340,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
             // NOOP
         }
 
+        // 绑定
         @Override
         public void bind(
                 ChannelHandlerContext ctx, SocketAddress localAddress, ChannelPromise promise) {
