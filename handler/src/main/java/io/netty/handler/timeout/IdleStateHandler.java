@@ -252,7 +252,8 @@ public class IdleStateHandler extends ChannelDuplexHandler {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        if (readerIdleTimeNanos > 0 || allIdleTimeNanos > 0) {
+        if (readerIdleTimeNanos > 0 || allIdleTimeNanos > 0) { // 设置了读空闲 或者 读写空闲
+            // 标记正在读取数据
             reading = true;
             firstReaderIdleEvent = firstAllIdleEvent = true;
         }
@@ -464,8 +465,44 @@ public class IdleStateHandler extends ChannelDuplexHandler {
 
         @Override
         protected void run(ChannelHandlerContext ctx) {
+
+
+            /*
+             * 如果 readerIdleTimeNanos = 0 , 则不会将读写空闲检测任务放入scheduledTaskQueue , 也就不会执行到此处
+             * 因此 readerIdleTimeNanos 一定大于 0 ,  假设 readerIdleTimeNanos = 1000
+             *
+             */
             long nextDelay = readerIdleTimeNanos;
+
+            /*
+             * 如果reading = true, 表明正在读取数据, 直接执行第525行代码, 重新将任务放入scheduledTaskQueue, (nextDelay = 1000) .
+             * 如果reading = false, 表明未正在读取数据
+             *
+             */
             if (!reading) {
+                /*
+                 *
+                 * 将以下等式改写成 nextDelay = lastReadTime + readerIdleTimeNanos - currentTime
+                 *
+                 * 情况一 : nextDelay <= 0 , 执行第511行代码, 重新将任务放入scheduledTaskQueue, (readerIdleTimeNanos = 1000) .
+                 * 出现这种情况言外之意, 读空闲
+                 * |<------- readerIdleTimeNanos -------|
+                 * |                                    |<-- -nextDelay -->|
+                 * |____________________________________|__________________|_______________
+                 * ^                                                       ^
+                 * lastReadTime                                            currentTime
+                 *
+                 *
+                 *
+                 * 情况二 : nextDelay > 0 , 执行第525行代码, 而且 nextDelay = B,C两点的时长 ,  `补时间差`
+                 * 出现这种情况言外之意, 读不空闲
+                 * |<----------- readerIdleTimeNanos -----------|
+                 * |                        |<--- nextDelay --->|
+                 * |________________________|___________________|__________________________
+                 * ^(A)                     ^(B)                ^(C)
+                 * lastReadTime             currentTime
+                 *
+                 */
                 nextDelay -= ticksInNanos() - lastReadTime;
             }
 
@@ -476,9 +513,9 @@ public class IdleStateHandler extends ChannelDuplexHandler {
                 boolean first = firstReaderIdleEvent;
                 firstReaderIdleEvent = false;
 
-                System.out.println("读超时空闲...");
                 try {
                     IdleStateEvent event = newIdleStateEvent(IdleState.READER_IDLE, first);
+                    // 触发事件
                     channelIdle(ctx, event);
                 } catch (Throwable t) {
                     ctx.fireExceptionCaught(t);
