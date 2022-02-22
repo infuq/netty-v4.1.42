@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.timeout;
 
 import io.netty.bootstrap.ServerBootstrap;
@@ -156,9 +141,7 @@ public class IdleStateHandler extends ChannelDuplexHandler {
              TimeUnit.SECONDS);
     }
 
-    /**
-     * @see #IdleStateHandler(boolean, long, long, long, TimeUnit)
-     */
+
     public IdleStateHandler(
             long readerIdleTime, long writerIdleTime, long allIdleTime,
             TimeUnit unit) {
@@ -213,26 +196,15 @@ public class IdleStateHandler extends ChannelDuplexHandler {
         }
     }
 
-    /**
-     * Return the readerIdleTime that was given when instance this class in milliseconds.
-     *
-     */
+
     public long getReaderIdleTimeInMillis() {
         return TimeUnit.NANOSECONDS.toMillis(readerIdleTimeNanos);
     }
 
-    /**
-     * Return the writerIdleTime that was given when instance this class in milliseconds.
-     *
-     */
     public long getWriterIdleTimeInMillis() {
         return TimeUnit.NANOSECONDS.toMillis(writerIdleTimeNanos);
     }
 
-    /**
-     * Return the allIdleTime that was given when instance this class in milliseconds.
-     *
-     */
     public long getAllIdleTimeInMillis() {
         return TimeUnit.NANOSECONDS.toMillis(allIdleTimeNanos);
     }
@@ -320,32 +292,35 @@ public class IdleStateHandler extends ChannelDuplexHandler {
 
         lastReadTime = lastWriteTime = ticksInNanos();
         if (readerIdleTimeNanos > 0) {
-            readerIdleTimeout = schedule(ctx, new ReaderIdleTimeoutTask(ctx),
-                    readerIdleTimeNanos, TimeUnit.NANOSECONDS);
+            readerIdleTimeout = schedule(ctx,
+                    new ReaderIdleTimeoutTask(ctx),
+                    readerIdleTimeNanos,
+                    TimeUnit.NANOSECONDS);
         }
         if (writerIdleTimeNanos > 0) {
-            writerIdleTimeout = schedule(ctx, new WriterIdleTimeoutTask(ctx),
-                    writerIdleTimeNanos, TimeUnit.NANOSECONDS);
+            writerIdleTimeout = schedule(ctx,
+                    new WriterIdleTimeoutTask(ctx),
+                    writerIdleTimeNanos,
+                    TimeUnit.NANOSECONDS);
         }
         if (allIdleTimeNanos > 0) {
-            allIdleTimeout = schedule(ctx, new AllIdleTimeoutTask(ctx),
-                    allIdleTimeNanos, TimeUnit.NANOSECONDS);
+            allIdleTimeout = schedule(ctx,
+                    new AllIdleTimeoutTask(ctx),
+                    allIdleTimeNanos,
+                    TimeUnit.NANOSECONDS);
         }
     }
 
-    /**
-     * This method is visible for testing!
-     */
+    ScheduledFuture<?> schedule(ChannelHandlerContext ctx, Runnable task, long delay, TimeUnit unit) {
+        return ctx.executor().schedule(task, delay, unit);
+    }
+
+
     long ticksInNanos() {
         return System.nanoTime();
     }
 
-    /**
-     * This method is visible for testing!
-     */
-    ScheduledFuture<?> schedule(ChannelHandlerContext ctx, Runnable task, long delay, TimeUnit unit) {
-        return ctx.executor().schedule(task, delay, unit);
-    }
+
 
     private void destroy() {
         state = 2;
@@ -480,6 +455,7 @@ public class IdleStateHandler extends ChannelDuplexHandler {
         protected abstract void run(ChannelHandlerContext ctx);
     }
 
+    // 读空闲任务
     private final class ReaderIdleTimeoutTask extends AbstractIdleTask {
 
         ReaderIdleTimeoutTask(ChannelHandlerContext ctx) {
@@ -500,6 +476,7 @@ public class IdleStateHandler extends ChannelDuplexHandler {
                 boolean first = firstReaderIdleEvent;
                 firstReaderIdleEvent = false;
 
+                System.out.println("读超时空闲...");
                 try {
                     IdleStateEvent event = newIdleStateEvent(IdleState.READER_IDLE, first);
                     channelIdle(ctx, event);
@@ -513,6 +490,7 @@ public class IdleStateHandler extends ChannelDuplexHandler {
         }
     }
 
+    // 写空闲任务
     private final class WriterIdleTimeoutTask extends AbstractIdleTask {
 
         WriterIdleTimeoutTask(ChannelHandlerContext ctx) {
@@ -548,6 +526,7 @@ public class IdleStateHandler extends ChannelDuplexHandler {
         }
     }
 
+    // 读写空闲任务
     private final class AllIdleTimeoutTask extends AbstractIdleTask {
 
         AllIdleTimeoutTask(ChannelHandlerContext ctx) {

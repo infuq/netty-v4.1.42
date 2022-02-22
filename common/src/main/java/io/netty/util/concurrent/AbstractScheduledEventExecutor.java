@@ -168,8 +168,14 @@ public abstract class AbstractScheduledEventExecutor extends AbstractEventExecut
         }
         validateScheduled0(delay, unit);
 
+        long nanoTime = ScheduledFutureTask.deadlineNanos(unit.toNanos(delay));
+
         return schedule(new ScheduledFutureTask<Void>(
-                this, command, null, ScheduledFutureTask.deadlineNanos(unit.toNanos(delay))));
+                this,
+                command,
+                null,
+                nanoTime)
+        );
     }
 
     @Override

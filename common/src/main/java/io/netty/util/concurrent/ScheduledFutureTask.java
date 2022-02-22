@@ -132,6 +132,7 @@ final class ScheduledFutureTask<V> extends PromiseTask<V> implements ScheduledFu
 
     @Override
     public void run() {
+        System.out.println(Thread.currentThread().getName() + "执行ScheduledFutureTask#run");
         assert executor().inEventLoop();
         try {
             if (periodNanos == 0) {
@@ -141,6 +142,7 @@ final class ScheduledFutureTask<V> extends PromiseTask<V> implements ScheduledFu
                 }
             } else {
                 // check if is done as it may was cancelled
+                // 检查任务是否被取消
                 if (!isCancelled()) {
                     task.call();
                     if (!executor().isShutdown()) {

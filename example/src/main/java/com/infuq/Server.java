@@ -10,6 +10,7 @@ import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
+import io.netty.handler.timeout.IdleStateHandler;
 import org.openjdk.jol.info.ClassLayout;
 import org.openjdk.jol.vm.VM;
 import sun.nio.ch.DirectBuffer;
@@ -46,8 +47,6 @@ public class Server {
         long heap = VM.current().addressOf(serverBootstrap);
         System.out.println("heap address:\t 0x" + Long.toHexString(heap));
 
-        // 查看元空间地址
-//        System.out.println(ClassLayout.parseInstance(serverBootstrap).toPrintable());
 
         ByteBuffer byteBuffer = ByteBuffer.allocateDirect(30 * 1024 * 1024);
         ((DirectBuffer)byteBuffer).cleaner().clean();
@@ -56,16 +55,17 @@ public class Server {
 
         try {
 
-            serverBootstrap.group(bossGroup, workerGroup)
+            serverBootstrap.group(bossGroup, workerGroup) // workerGroup会被 ServerBootstrapAcceptor 使用
                     .channel(NioServerSocketChannel.class)
                     .handler(new LoggingHandler(LogLevel.INFO))
-                    .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
-                    .childHandler(new ChannelInitializer<NioSocketChannel>() {
+                    .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT) // 会被 ServerBootstrapAcceptor 使用
+                    .childHandler(new ChannelInitializer<NioSocketChannel>() {  // 会被 ServerBootstrapAcceptor 使用
                         @Override
                         protected void initChannel(NioSocketChannel ch) {
                             ChannelPipeline channelPipeline = ch.pipeline();
                             channelPipeline.addLast(new StringEncoder());
                             channelPipeline.addLast(new StringDecoder());
+                            channelPipeline.addLast(new IdleStateHandler(10, 0, 0));
                             channelPipeline.addLast(businessGroup, new ServerHandler());
                         }
                     });
