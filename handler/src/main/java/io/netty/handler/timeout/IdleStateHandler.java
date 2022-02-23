@@ -85,8 +85,11 @@ public class IdleStateHandler extends ChannelDuplexHandler {
 
     // Not create a new ChannelFutureListener per write operation to reduce GC pressure.
     private final ChannelFutureListener writeListener = new ChannelFutureListener() {
+        // 数据刷到TCP缓冲区之后才会回调Listener
         @Override
         public void operationComplete(ChannelFuture future) throws Exception {
+            System.out.println("写数据完成...");
+            // 更新最后写数据的时间
             lastWriteTime = ticksInNanos();
             firstWriterIdleEvent = firstAllIdleEvent = true;
         }
@@ -179,6 +182,8 @@ public class IdleStateHandler extends ChannelDuplexHandler {
 
         this.observeOutput = observeOutput;
 
+        // 空闲时长都被设置成非负数
+
         if (readerIdleTime <= 0) {
             readerIdleTimeNanos = 0;
         } else {
@@ -263,7 +268,9 @@ public class IdleStateHandler extends ChannelDuplexHandler {
     @Override
     public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
         if ((readerIdleTimeNanos > 0 || allIdleTimeNanos > 0) && reading) {
+            // 更新最后读取数据的时间
             lastReadTime = ticksInNanos();
+            // 标记未正在读取数据
             reading = false;
         }
         ctx.fireChannelReadComplete();
@@ -272,8 +279,11 @@ public class IdleStateHandler extends ChannelDuplexHandler {
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
         // Allow writing with void promise if handler is only configured for read timeout events.
-        if (writerIdleTimeNanos > 0 || allIdleTimeNanos > 0) {
-            ctx.write(msg, promise.unvoid()).addListener(writeListener);
+        if (writerIdleTimeNanos > 0 || allIdleTimeNanos > 0) { // 设置了写空闲 或者 读写空闲
+
+            ChannelFuture channelFuture = ctx.write(msg, promise.unvoid());
+            System.out.println("channelFuture.hashCode=" + channelFuture.hashCode());
+            channelFuture.addListener(writeListener); // 添加一个写完成之后的监听回调
         } else {
             ctx.write(msg, promise);
         }
@@ -293,18 +303,21 @@ public class IdleStateHandler extends ChannelDuplexHandler {
 
         lastReadTime = lastWriteTime = ticksInNanos();
         if (readerIdleTimeNanos > 0) {
+            // 向scheduledTaskQueue中添加读空闲任务
             readerIdleTimeout = schedule(ctx,
                     new ReaderIdleTimeoutTask(ctx),
                     readerIdleTimeNanos,
                     TimeUnit.NANOSECONDS);
         }
         if (writerIdleTimeNanos > 0) {
+            // 向scheduledTaskQueue中添加写空闲任务
             writerIdleTimeout = schedule(ctx,
                     new WriterIdleTimeoutTask(ctx),
                     writerIdleTimeNanos,
                     TimeUnit.NANOSECONDS);
         }
         if (allIdleTimeNanos > 0) {
+            // 向scheduledTaskQueue中添加读写空闲任务
             allIdleTimeout = schedule(ctx,
                     new AllIdleTimeoutTask(ctx),
                     allIdleTimeNanos,
@@ -389,6 +402,7 @@ public class IdleStateHandler extends ChannelDuplexHandler {
      * https://github.com/netty/netty/issues/6150
      */
     private boolean hasOutputChanged(ChannelHandlerContext ctx, boolean first) {
+        // observeOutput 默认值false
         if (observeOutput) {
 
             // We can take this shortcut if the ChannelPromises that got passed into write()
@@ -537,7 +551,32 @@ public class IdleStateHandler extends ChannelDuplexHandler {
         @Override
         protected void run(ChannelHandlerContext ctx) {
 
+            // 最后写数据的时间
             long lastWriteTime = IdleStateHandler.this.lastWriteTime;
+
+            // 假设 writerIdleTimeNanos = 1000
+
+            /*
+             * 把以下等式改写成 nextDelay = lastWriteTime + writerIdleTimeNanos - currentTime
+             *
+             * 情况一 : nextDelay <= 0 , 执行第576行代码, 重新将任务放入scheduledTaskQueue, (writerIdleTimeNanos = 1000) .
+             * 出现这种情况言外之意, 写空闲
+             * |<------- writerIdleTimeNanos -------|
+             * |                                    |<-- -nextDelay -->|
+             * |____________________________________|__________________|_______________
+             * ^                                                       ^
+             * lastWriteTime                                           currentTime
+             *
+             *
+             *
+             * 情况二 : nextDelay > 0 , 执行第525行代码, 而且 nextDelay = B,C两点的时长 ,  `补时间差`
+             * 出现这种情况言外之意, 写不空闲
+             * |<----------- writerIdleTimeNanos -----------|
+             * |                        |<--- nextDelay --->|
+             * |________________________|___________________|__________________________
+             * ^(A)                     ^(B)                ^(C)
+             * lastWriteTime            currentTime
+             */
             long nextDelay = writerIdleTimeNanos - (ticksInNanos() - lastWriteTime);
             if (nextDelay <= 0) {
                 // Writer is idle - set a new timeout and notify the callback.
@@ -547,11 +586,13 @@ public class IdleStateHandler extends ChannelDuplexHandler {
                 firstWriterIdleEvent = false;
 
                 try {
+                    //
                     if (hasOutputChanged(ctx, first)) {
                         return;
                     }
 
                     IdleStateEvent event = newIdleStateEvent(IdleState.WRITER_IDLE, first);
+                    // 触发事件
                     channelIdle(ctx, event);
                 } catch (Throwable t) {
                     ctx.fireExceptionCaught(t);

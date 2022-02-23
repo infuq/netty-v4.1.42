@@ -144,7 +144,7 @@ public final class ChannelOutboundBuffer {
             }
             do {
                 flushed ++;
-                if (!entry.promise.setUncancellable()) {
+                if (!entry.promise.setUncancellable()) { // ChannelFuture channelFuture = ctx.write(...);
                     // Was cancelled so make sure we free up memory and notify about the freed bytes
                     int pending = entry.cancel();
                     decrementPendingOutboundBytes(pending, false, true);
@@ -238,7 +238,7 @@ public final class ChannelOutboundBuffer {
     public void progress(long amount) {
         Entry e = flushedEntry;
         assert e != null;
-        ChannelPromise p = e.promise;
+        ChannelPromise p = e.promise; // ChannelFuture channelFuture = ctx.write(...);
         long progress = e.progress + amount;
         e.progress = progress;
         if (p instanceof ChannelProgressivePromise) {
@@ -259,7 +259,7 @@ public final class ChannelOutboundBuffer {
         }
         Object msg = e.msg;
 
-        ChannelPromise promise = e.promise;
+        ChannelPromise promise = e.promise; // ChannelFuture channelFuture = ctx.write(...);
         int size = e.pendingSize;
 
         removeEntry(e);
@@ -267,6 +267,7 @@ public final class ChannelOutboundBuffer {
         if (!e.cancelled) {
             // only release message, notify and decrement if it was not canceled before.
             ReferenceCountUtil.safeRelease(msg);
+            // 回调Listener
             safeSuccess(promise);
             decrementPendingOutboundBytes(size, false, true);
         }
@@ -347,6 +348,7 @@ public final class ChannelOutboundBuffer {
                     progress(readableBytes);
                     writtenBytes -= readableBytes;
                 }
+                //
                 remove();
             } else { // readableBytes > writtenBytes
                 if (writtenBytes != 0) {

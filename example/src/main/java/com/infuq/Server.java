@@ -65,7 +65,7 @@ public class Server {
                             ChannelPipeline channelPipeline = ch.pipeline();
                             channelPipeline.addLast(new StringEncoder());
                             channelPipeline.addLast(new StringDecoder());
-                            channelPipeline.addLast(new IdleStateHandler(10, 0, 0));
+                            channelPipeline.addLast(new IdleStateHandler(0, 10, 0));
                             channelPipeline.addLast(businessGroup, new ServerHandler());
                         }
                     });
