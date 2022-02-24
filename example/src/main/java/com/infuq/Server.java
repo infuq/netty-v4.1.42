@@ -11,6 +11,8 @@ import io.netty.handler.codec.string.StringEncoder;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.timeout.IdleStateHandler;
+import io.netty.util.internal.logging.InternalLoggerFactory;
+import io.netty.util.internal.logging.Slf4JLoggerFactory;
 import org.openjdk.jol.info.ClassLayout;
 import org.openjdk.jol.vm.VM;
 import sun.nio.ch.DirectBuffer;
@@ -37,6 +39,7 @@ public class Server {
 
          */
 
+        InternalLoggerFactory.setDefaultFactory(Slf4JLoggerFactory.INSTANCE);
 
         EventLoopGroup bossGroup = new NioEventLoopGroup(1);
         EventLoopGroup workerGroup = new NioEventLoopGroup(8);
@@ -63,10 +66,14 @@ public class Server {
                         @Override
                         protected void initChannel(NioSocketChannel ch) {
                             ChannelPipeline channelPipeline = ch.pipeline();
+
                             channelPipeline.addLast(new StringEncoder());
                             channelPipeline.addLast(new StringDecoder());
-                            channelPipeline.addLast(new IdleStateHandler(0, 10, 0));
+                            channelPipeline.addLast("idleEventHandler", new IdleStateHandler(0, 10, 0));
                             channelPipeline.addLast(businessGroup, new ServerHandler());
+                            channelPipeline.addAfter("idleEventHandler","loggingHandler",new LoggingHandler(LogLevel.INFO));
+
+
                         }
                     });
 
