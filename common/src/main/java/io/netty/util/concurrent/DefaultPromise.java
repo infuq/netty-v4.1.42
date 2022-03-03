@@ -495,9 +495,11 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
             }
         }
 
+        System.out.println(Thread.currentThread().getName() + "并没有执行ChannelPromise["+this.hashCode()+"]的监听, 而是将其添加到它对应的Queue中.");
         safeExecute(executor, new Runnable() {
             @Override
             public void run() {
+                System.out.println(Thread.currentThread().getName() + "执行ChannelPromise["+this.hashCode()+"]的监听");
                 notifyListenersNow();
             }
         });

@@ -88,8 +88,9 @@ public class IdleStateHandler extends ChannelDuplexHandler {
         // 数据刷到TCP缓冲区之后才会回调Listener
         @Override
         public void operationComplete(ChannelFuture future) throws Exception {
+            System.out.println(Thread.currentThread().getName() + "调用writeListener#operationComplete");
             System.out.println("写数据完成...");
-            // 更新最后写数据的时间
+            // 数据刷到TCP缓冲区之后 , 更新最后写数据的时间
             lastWriteTime = ticksInNanos();
             firstWriterIdleEvent = firstAllIdleEvent = true;
         }
@@ -257,7 +258,7 @@ public class IdleStateHandler extends ChannelDuplexHandler {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        if (readerIdleTimeNanos > 0 || allIdleTimeNanos > 0) { // 设置了读空闲 或者 读写空闲
+        if (readerIdleTimeNanos > 0 || allIdleTimeNanos > 0) { // 如果设置了读空闲 或者 读写空闲
             // 标记正在读取数据
             reading = true;
             firstReaderIdleEvent = firstAllIdleEvent = true;
@@ -270,7 +271,7 @@ public class IdleStateHandler extends ChannelDuplexHandler {
         if ((readerIdleTimeNanos > 0 || allIdleTimeNanos > 0) && reading) {
             // 更新最后读取数据的时间
             lastReadTime = ticksInNanos();
-            // 标记未正在读取数据
+            // 读取数据已完成, 标记成没有正在读取数据, 与263行相互呼应
             reading = false;
         }
         ctx.fireChannelReadComplete();
@@ -279,10 +280,10 @@ public class IdleStateHandler extends ChannelDuplexHandler {
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
         // Allow writing with void promise if handler is only configured for read timeout events.
-        if (writerIdleTimeNanos > 0 || allIdleTimeNanos > 0) { // 设置了写空闲 或者 读写空闲
+        if (writerIdleTimeNanos > 0 || allIdleTimeNanos > 0) { // 如果设置了写空闲 或者 读写空闲
 
             ChannelFuture channelFuture = ctx.write(msg, promise.unvoid());
-            System.out.println("channelFuture.hashCode=" + channelFuture.hashCode());
+            System.out.println(Thread.currentThread().getName() + "向ChannelPromise[" + channelFuture.hashCode() + "]添加一个监听");
             channelFuture.addListener(writeListener); // 添加一个写完成之后的监听回调
         } else {
             ctx.write(msg, promise);
@@ -482,39 +483,45 @@ public class IdleStateHandler extends ChannelDuplexHandler {
 
 
             /*
-             * 如果 readerIdleTimeNanos = 0 , 则不会将读写空闲检测任务放入scheduledTaskQueue , 也就不会执行到此处
-             * 因此 readerIdleTimeNanos 一定大于 0 ,  假设 readerIdleTimeNanos = 1000
+             * 根据 initialize 方法的逻辑, readerIdleTimeNanos 一定大于等于 0 , 如果readerIdleTimeNanos = 0 , 则不会将读写空闲检测任务放入scheduledTaskQueue , 也就不会执行到此处
+             * 假设 readerIdleTimeNanos = 1000 ms
              *
              */
             long nextDelay = readerIdleTimeNanos;
 
             /*
-             * 如果reading = true, 表明正在读取数据, 直接执行第525行代码, 重新将任务放入scheduledTaskQueue, (nextDelay = 1000) .
-             * 如果reading = false, 表明未正在读取数据
+             * 如果reading = true, 表明正在读取数据, 读并不空闲, 直接执行第546行代码, 依然按照之前的延迟时间(readerIdleTimeNanos), 将任务重新放入scheduledTaskQueue.
+             * 如果reading = false, 表明没有正在读取数据, 那么就要判断一下空闲时长
              *
              */
             if (!reading) {
                 /*
                  *
-                 * 将以下等式改写成 nextDelay = lastReadTime + readerIdleTimeNanos - currentTime
+                 * 将第521行的等式改写成 nextDelay = lastReadTime + readerIdleTimeNanos - currentTime
                  *
-                 * 情况一 : nextDelay <= 0 , 执行第511行代码, 重新将任务放入scheduledTaskQueue, (readerIdleTimeNanos = 1000) .
-                 * 出现这种情况言外之意, 读空闲
-                 * |<------- readerIdleTimeNanos -------|
-                 * |                                    |<-- -nextDelay -->|
-                 * |____________________________________|__________________|_______________
-                 * ^                                                       ^
-                 * lastReadTime                                            currentTime
-                 *
-                 *
-                 *
-                 * 情况二 : nextDelay > 0 , 执行第525行代码, 而且 nextDelay = B,C两点的时长 ,  `补时间差`
-                 * 出现这种情况言外之意, 读不空闲
+                 * 情况一 : nextDelay > 0 , 出现这种情况言外之意, 读暂时不空闲(空闲时长还未达到一个readerIdleTimeNanos时长). 执行第546行代码, 而且 nextDelay = B,C两点的时长.  `补时长差`
+                 * 之所以在B点会触发读空闲定时任务的执行, 是因为任务是在Z,A之间被放入scheduledTaskQueue中. 任务在scheduledTaskQueue`休眠`期间, 又发生了读操作, 导致lastReadTime变到了A点.
+                 * Z,B两点的时长 = readerIdleTimeNanos
                  * |<----------- readerIdleTimeNanos -----------|
                  * |                        |<--- nextDelay --->|
-                 * |________________________|___________________|__________________________
-                 * ^(A)                     ^(B)                ^(C)
+    __|____________|________________________|___________________|__________________________
+      ^(Z)         ^(A)                     ^(B)                ^(C)
                  * lastReadTime             currentTime
+                 *
+                 *
+                 *
+                 * 情况二 : 在情况一的场景下, 如果在B,C之间又发生了读操作, 那么当C点的时刻读空闲任务被执行, 场景与情况一一样.
+                 *                       如果在B,C之间没有发生读操作, 那么当C点的时刻读空闲任务被执行, 情况三
+                 *
+                 *
+                 *
+                 * 情况三 : nextDelay <= 0 , 出现这种情况言外之意, 读已经空闲. 执行第532行代码, 重新将任务放入scheduledTaskQueue. (readerIdleTimeNanos = 1000) .
+                 *
+                 * |<----------- readerIdleTimeNanos -----------|
+                 * |                                            |<-- -nextDelay -->|
+                 * |________________________|___________________|__________________|_______________
+                 * ^(A)                     ^(B)                ^(C)               ^
+                 * lastReadTime                                                    currentTime
                  *
                  */
                 nextDelay -= ticksInNanos() - lastReadTime;
@@ -551,31 +558,41 @@ public class IdleStateHandler extends ChannelDuplexHandler {
         @Override
         protected void run(ChannelHandlerContext ctx) {
 
-            // 最后写数据的时间
+            // 最后写数据的时间. 此值由第94行逻辑更新
             long lastWriteTime = IdleStateHandler.this.lastWriteTime;
 
             // 假设 writerIdleTimeNanos = 1000
 
             /*
+             *
              * 把以下等式改写成 nextDelay = lastWriteTime + writerIdleTimeNanos - currentTime
              *
-             * 情况一 : nextDelay <= 0 , 执行第576行代码, 重新将任务放入scheduledTaskQueue, (writerIdleTimeNanos = 1000) .
-             * 出现这种情况言外之意, 写空闲
-             * |<------- writerIdleTimeNanos -------|
-             * |                                    |<-- -nextDelay -->|
-             * |____________________________________|__________________|_______________
-             * ^                                                       ^
-             * lastWriteTime                                           currentTime
              *
-             *
-             *
-             * 情况二 : nextDelay > 0 , 执行第525行代码, 而且 nextDelay = B,C两点的时长 ,  `补时间差`
-             * 出现这种情况言外之意, 写不空闲
+             * 情况一 : nextDelay > 0 , 出现这种情况言外之意, 写暂时不空闲(空闲时长还未达到一个writerIdleTimeNanos时长). 执行第619行代码, 而且 nextDelay = B,C两点的时长.  `补时长差`
+             * 之所以在B点会触发写空闲定时任务的执行, 是因为任务是在Z,A之间被放入scheduledTaskQueue中. 任务在scheduledTaskQueue`休眠`期间, 又发生了写操作, 导致lastWriteTime变到了A点.
+             * Z,B两点的时长 = writerIdleTimeNanos
              * |<----------- writerIdleTimeNanos -----------|
              * |                        |<--- nextDelay --->|
-             * |________________________|___________________|__________________________
-             * ^(A)                     ^(B)                ^(C)
+__|____________|________________________|___________________|__________________________
+  ^(Z)         ^(A)                     ^(B)                ^(C)
              * lastWriteTime            currentTime
+             *
+             *
+             *
+             * 情况二 : 在情况一的场景下, 如果在B,C之间又发生了写操作, 那么当C点的时刻写空闲任务被执行, 场景与情况一一样.
+             *                       如果在B,C之间没有发生写操作, 那么当C点的时刻写空闲任务被执行, 情况三
+             *
+             *
+             *
+             * 情况三 : nextDelay <= 0 , 出现这种情况言外之意, 写已经空闲. 执行第600行代码, 重新将任务放入scheduledTaskQueue, (writerIdleTimeNanos = 1000) .
+             *
+             * |<----------- writerIdleTimeNanos -----------|
+             * |                                            |<-- -nextDelay -->|
+             * |________________________|___________________|__________________|_______________
+             * ^(A)                     ^(B)                ^(C)               ^
+             * lastWriteTime                                                   currentTime
+             *
+             *
              */
             long nextDelay = writerIdleTimeNanos - (ticksInNanos() - lastWriteTime);
             if (nextDelay <= 0) {

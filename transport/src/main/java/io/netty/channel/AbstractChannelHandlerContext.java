@@ -809,7 +809,9 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
 
     @Override
     public ChannelFuture writeAndFlush(Object msg) {
-        return writeAndFlush(msg, newPromise());
+        ChannelPromise channelPromise = newPromise();
+        System.out.println(Thread.currentThread().getName() + "创建一个ChannelPromise[" + channelPromise.hashCode() + "]");
+        return writeAndFlush(msg, channelPromise);
     }
 
     private static void notifyOutboundHandlerException(Throwable cause, ChannelPromise promise) {
