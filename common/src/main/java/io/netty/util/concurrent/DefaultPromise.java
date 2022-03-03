@@ -22,6 +22,7 @@ import io.netty.util.internal.SystemPropertyUtil;
 import io.netty.util.internal.ThrowableUtil;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
+import org.graalvm.compiler.nodes.NodeView;
 
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
@@ -495,11 +496,13 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
             }
         }
 
+        DefaultPromise<?> channelPromise = this;
+
         System.out.println(Thread.currentThread().getName() + "并没有执行ChannelPromise["+this.hashCode()+"]的监听, 而是将其添加到它对应的Queue中.");
         safeExecute(executor, new Runnable() {
             @Override
             public void run() {
-                System.out.println(Thread.currentThread().getName() + "执行ChannelPromise["+this.hashCode()+"]的监听");
+                System.out.println(Thread.currentThread().getName() + "执行ChannelPromise["+channelPromise.hashCode()+"]的监听");
                 notifyListenersNow();
             }
         });
