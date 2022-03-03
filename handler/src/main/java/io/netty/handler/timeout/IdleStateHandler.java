@@ -203,6 +203,7 @@ public class IdleStateHandler extends ChannelDuplexHandler {
     }
 
 
+
     public long getReaderIdleTimeInMillis() {
         return TimeUnit.NANOSECONDS.toMillis(readerIdleTimeNanos);
     }
@@ -661,3 +662,5 @@ __|____________|________________________|___________________|___________________
         }
     }
 }
+
+
