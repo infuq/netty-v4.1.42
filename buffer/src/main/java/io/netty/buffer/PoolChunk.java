@@ -144,7 +144,10 @@ final class PoolChunk<T> implements PoolChunkMetric {
     PoolChunk(PoolArena<T> arena, T memory, int pageSize, int maxOrder, int pageShifts, int chunkSize, int offset) {
         unpooled = false;
         this.arena = arena;
-        this.memory = memory;
+        this.memory = memory; // 即DirectByteBuffer(address, capacity, limit...)
+
+        DirectByteBuffer d = (DirectByteBuffer) memory;
+
         this.pageSize = pageSize;
         this.pageShifts = pageShifts;
         this.maxOrder = maxOrder;
@@ -203,6 +206,9 @@ final class PoolChunk<T> implements PoolChunkMetric {
 
     @Override
     public int usage() {
+
+
+
         final int freeBytes;
         synchronized (arena) {
             freeBytes = this.freeBytes;

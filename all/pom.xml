@@ -238,7 +238,7 @@
               <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>netty-build</artifactId>
-                <version>19</version>
+                <version>18</version>
                 <exclusions>
                   <!-- Use version 7.3 until a new netty-build release is out -->
                   <!-- See https://issues.apache.org/jira/browse/JXR-133 -->

@@ -470,7 +470,6 @@ final class PlatformDependent0 {
 
     static ByteBuffer newDirectBuffer(long address, int capacity) {
         ObjectUtil.checkPositiveOrZero(capacity, "capacity");
-
         try {
             return (ByteBuffer) DIRECT_BUFFER_CONSTRUCTOR.newInstance(address, capacity);
         } catch (Throwable cause) {
