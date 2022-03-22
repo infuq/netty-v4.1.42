@@ -146,8 +146,6 @@ final class PoolChunk<T> implements PoolChunkMetric {
         this.arena = arena;
         this.memory = memory; // 即DirectByteBuffer(address, capacity, limit...)
 
-        DirectByteBuffer d = (DirectByteBuffer) memory;
-
         this.pageSize = pageSize;
         this.pageShifts = pageShifts;
         this.maxOrder = maxOrder;

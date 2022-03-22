@@ -1078,7 +1078,7 @@ public final class PlatformDependent {
                 Class<?> vmClass = Class.forName("sun.misc.VM", true, systemClassLoader);
 
 
-                // -XX:MaxDirectMemorySize=38M
+                // -XX:MaxDirectMemorySize=...
                 // 获取直接内存大小
                 Method m = vmClass.getDeclaredMethod("maxDirectMemory");
                 maxDirectMemory = ((Number) m.invoke(null)).longValue();
