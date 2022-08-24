@@ -243,8 +243,8 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
     }
 
     @Override
-    public ChannelFuture bind(SocketAddress localAddress, ChannelPromise promise) {
-        return pipeline.bind(localAddress, promise);
+    public ChannelFuture bind(SocketAddress localAddress, ChannelPromise bindFuture) {
+        return pipeline.bind(localAddress, bindFuture);
     }
 
     @Override
@@ -449,16 +449,16 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
         }
 
         @Override
-        public final void register(EventLoop eventLoop, final ChannelPromise promise) {
+        public final void register(EventLoop eventLoop, final ChannelPromise regFuture) {
             if (eventLoop == null) {
                 throw new NullPointerException("eventLoop");
             }
             if (isRegistered()) {
-                promise.setFailure(new IllegalStateException("registered to an event loop already"));
+                regFuture.setFailure(new IllegalStateException("registered to an event loop already"));
                 return;
             }
             if (!isCompatible(eventLoop)) {
-                promise.setFailure(
+                regFuture.setFailure(
                         new IllegalStateException("incompatible event loop type: " + eventLoop.getClass().getName()));
                 return;
             }
@@ -467,13 +467,14 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
 
             // 注册
             if (eventLoop.inEventLoop()) {
-                register0(promise);
+                register0(regFuture);
             } else {
                 try {
                     eventLoop.execute(new Runnable() {
                         @Override
                         public void run() {
-                            register0(promise);
+                            System.out.println(Thread.currentThread().getName() + "执行注册任务");
+                            register0(regFuture);
                         }
                     });
                 } catch (Throwable t) {
@@ -482,16 +483,16 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                             AbstractChannel.this, t);
                     closeForcibly();
                     closeFuture.setClosed();
-                    safeSetFailure(promise, t);
+                    safeSetFailure(regFuture, t);
                 }
             }
         }
 
-        private void register0(ChannelPromise promise) {
+        private void register0(ChannelPromise regFuture) {
             try {
                 // check if the channel is still open as it could be closed in the mean time when the register
                 // call was outside of the eventLoop
-                if (!promise.setUncancellable() || !ensureOpen(promise)) {
+                if (!regFuture.setUncancellable() || !ensureOpen(regFuture)) {
                     return;
                 }
                 boolean firstRegistration = neverRegistered;
@@ -503,7 +504,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                 // user may already fire events through the pipeline in the ChannelFutureListener.
                 pipeline.invokeHandlerAddedIfNeeded();
 
-                safeSetSuccess(promise);
+                safeSetSuccess(regFuture);
                 pipeline.fireChannelRegistered();
                 // Only fire a channelActive if the channel has never been registered. This prevents firing
                 // multiple channel actives if the channel is deregistered and re-registered.
@@ -522,15 +523,15 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                 // Close the channel directly to avoid FD leak.
                 closeForcibly();
                 closeFuture.setClosed();
-                safeSetFailure(promise, t);
+                safeSetFailure(regFuture, t);
             }
         }
 
         @Override
-        public final void bind(final SocketAddress localAddress, final ChannelPromise promise) {
+        public final void bind(final SocketAddress localAddress, final ChannelPromise bindFuture) {
             assertEventLoop();
 
-            if (!promise.setUncancellable() || !ensureOpen(promise)) {
+            if (!bindFuture.setUncancellable() || !ensureOpen(bindFuture)) {
                 return;
             }
 
@@ -552,7 +553,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                 // 绑定
                 doBind(localAddress);
             } catch (Throwable t) {
-                safeSetFailure(promise, t);
+                safeSetFailure(bindFuture, t);
                 closeIfClosed();
                 return;
             }
@@ -566,7 +567,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                 });
             }
 
-            safeSetSuccess(promise);
+            safeSetSuccess(bindFuture);
         }
 
         @Override

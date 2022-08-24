@@ -349,7 +349,7 @@ public final class ChannelOutboundBuffer {
                     progress(readableBytes);
                     writtenBytes -= readableBytes;
                 }
-                //
+                // LOOK
                 remove();
             } else { // readableBytes > writtenBytes
                 if (writtenBytes != 0) {

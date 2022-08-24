@@ -151,6 +151,15 @@ public class LoggingHandler extends ChannelDuplexHandler {
         ctx.fireChannelUnregistered();
     }
 
+
+    @Override
+    public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
+        super.handlerAdded(ctx);
+
+        System.out.println("手动添加的handlerAdded");
+
+    }
+
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         if (logger.isEnabled(internalLevel)) {
@@ -185,6 +194,7 @@ public class LoggingHandler extends ChannelDuplexHandler {
 
     @Override
     public void bind(ChannelHandlerContext ctx, SocketAddress localAddress, ChannelPromise promise) throws Exception {
+        System.out.println("LoggingHandler#bind");
         if (logger.isEnabled(internalLevel)) {
             logger.log(internalLevel, format(ctx, "BIND", localAddress));
         }

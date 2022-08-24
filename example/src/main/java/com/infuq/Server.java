@@ -48,13 +48,13 @@ public class Server {
         ServerBootstrap serverBootstrap = new ServerBootstrap();
 
         long heap = VM.current().addressOf(serverBootstrap);
-        System.out.println("heap address:\t 0x" + Long.toHexString(heap));
+//        System.out.println("heap address:\t 0x" + Long.toHexString(heap));
 
 
         ByteBuffer byteBuffer = ByteBuffer.allocateDirect(30 * 1024 * 1024);
         ((DirectBuffer)byteBuffer).cleaner().clean();
 
-        System.out.println(ClassLayout.parseInstance(byteBuffer).toPrintable());
+//        System.out.println(ClassLayout.parseInstance(byteBuffer).toPrintable());
 
         try {
 
@@ -69,7 +69,7 @@ public class Server {
 
                             channelPipeline.addLast(new StringEncoder());
                             channelPipeline.addLast(new StringDecoder());
-                            channelPipeline.addLast("idleEventHandler", new IdleStateHandler(0, 10, 0));
+                            channelPipeline.addLast("idleEventHandler", new IdleStateHandler(0, 0, 0));
                             channelPipeline.addLast(businessGroup, new ServerHandler());
                             channelPipeline.addAfter("idleEventHandler","loggingHandler",new LoggingHandler(LogLevel.INFO));
 
@@ -77,7 +77,18 @@ public class Server {
                         }
                     });
 
-            ChannelFuture channelFuture = serverBootstrap.bind("127.0.0.1", 8080).sync();
+            ChannelFuture bindFuture = serverBootstrap.bind("127.0.0.1", 8080);
+
+            bindFuture.addListener(new ChannelFutureListener() {
+                @Override
+                public void operationComplete(ChannelFuture future) throws Exception {
+                    System.out.println("@(" + future.hashCode() + ")回调自定义的BindFuture");
+                }
+            });
+
+
+            // bindFuture和channelFuture是同一个对象
+            ChannelFuture channelFuture = bindFuture.sync();
             channelFuture.channel().closeFuture().sync();
         } finally {
             bossGroup.shutdownGracefully();

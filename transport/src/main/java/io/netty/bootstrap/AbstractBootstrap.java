@@ -265,12 +265,12 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
 
         if (regFuture.isDone()) {
             // At this point we know that the registration was complete and successful.
-            ChannelPromise promise = channel.newPromise();
-            doBind0(regFuture, channel, localAddress, promise);
-            return promise;
+            ChannelPromise bindFuture = channel.newPromise();
+            doBind0(regFuture, channel, localAddress, bindFuture);
+            return bindFuture;
         } else {
             // Registration future is almost always fulfilled already, but just in case it's not.
-            final PendingRegistrationPromise promise = new PendingRegistrationPromise(channel);
+            final PendingRegistrationPromise bindFuture = new PendingRegistrationPromise(channel);
             regFuture.addListener(new ChannelFutureListener() {
                 @Override
                 public void operationComplete(ChannelFuture future) throws Exception {
@@ -278,18 +278,18 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
                     if (cause != null) {
                         // Registration on the EventLoop failed so fail the ChannelPromise directly to not cause an
                         // IllegalStateException once we try to access the EventLoop of the Channel.
-                        promise.setFailure(cause);
+                        bindFuture.setFailure(cause);
                     } else {
                         // Registration was successful, so set the correct executor to use.
                         // See https://github.com/netty/netty/issues/2586
-                        promise.registered();
+                        bindFuture.registered();
 
                         // 绑定
-                        doBind0(regFuture, channel, localAddress, promise);
+                        doBind0(regFuture, channel, localAddress, bindFuture);
                     }
                 }
             });
-            return promise;
+            return bindFuture;
         }
     }
 
@@ -337,7 +337,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
 
     private static void doBind0(
             final ChannelFuture regFuture, final Channel channel,
-            final SocketAddress localAddress, final ChannelPromise promise) {
+            final SocketAddress localAddress, final ChannelPromise bindFuture) {
 
         // This method is invoked before channelRegistered() is triggered.  Give user handlers a chance to set up
         // the pipeline in its channelRegistered() implementation.
@@ -346,9 +346,9 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
             public void run() {
                 if (regFuture.isSuccess()) {
                     // 绑定
-                    channel.bind(localAddress, promise).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
+                    channel.bind(localAddress, bindFuture).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
                 } else {
-                    promise.setFailure(regFuture.cause());
+                    bindFuture.setFailure(regFuture.cause());
                 }
             }
         });

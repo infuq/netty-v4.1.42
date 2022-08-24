@@ -498,9 +498,9 @@ public class IdleStateHandler extends ChannelDuplexHandler {
             if (!reading) {
                 /*
                  *
-                 * 将第521行的等式改写成 nextDelay = lastReadTime + readerIdleTimeNanos - currentTime
+                 * 将第528行的等式改写成 nextDelay = lastReadTime + readerIdleTimeNanos - currentTime
                  *
-                 * 情况一 : nextDelay > 0 , 出现这种情况言外之意, 读暂时不空闲(空闲时长还未达到一个readerIdleTimeNanos时长). 执行第546行代码, 而且 nextDelay = B,C两点的时长.  `补时长差`
+                 * 情况一 : nextDelay > 0 , 出现这种情况言外之意, 读暂时不空闲(空闲时长还未达到一个readerIdleTimeNanos时长). 执行第547行代码, 而且 nextDelay = B,C两点的时长.  `补时长差`
                  * 之所以在B点会触发读空闲定时任务的执行, 是因为任务是在Z,A之间被放入scheduledTaskQueue中. 任务在scheduledTaskQueue`休眠`期间, 又发生了读操作, 导致lastReadTime变到了A点.
                  * Z,B两点的时长 = readerIdleTimeNanos
                  * |<----------- readerIdleTimeNanos -----------|
@@ -516,7 +516,7 @@ public class IdleStateHandler extends ChannelDuplexHandler {
                  *
                  *
                  *
-                 * 情况三 : nextDelay <= 0 , 出现这种情况言外之意, 读已经空闲. 执行第532行代码, 重新将任务放入scheduledTaskQueue. (readerIdleTimeNanos = 1000) .
+                 * 情况三 : nextDelay <= 0 , 出现这种情况言外之意, 读已经空闲. 执行第533行代码, 重新将任务放入scheduledTaskQueue. (readerIdleTimeNanos = 1000) .    nextDelay = N * readerIdleTimeNanos
                  *
                  * |<----------- readerIdleTimeNanos -----------|
                  * |                                            |<-- -nextDelay -->|
@@ -569,7 +569,7 @@ public class IdleStateHandler extends ChannelDuplexHandler {
              * 把以下等式改写成 nextDelay = lastWriteTime + writerIdleTimeNanos - currentTime
              *
              *
-             * 情况一 : nextDelay > 0 , 出现这种情况言外之意, 写暂时不空闲(空闲时长还未达到一个writerIdleTimeNanos时长). 执行第619行代码, 而且 nextDelay = B,C两点的时长.  `补时长差`
+             * 情况一 : nextDelay > 0 , 出现这种情况言外之意, 写暂时不空闲(空闲时长还未达到一个writerIdleTimeNanos时长). 执行第620行代码, 而且 nextDelay = B,C两点的时长.  `补时长差`
              * 之所以在B点会触发写空闲定时任务的执行, 是因为任务是在Z,A之间被放入scheduledTaskQueue中. 任务在scheduledTaskQueue`休眠`期间, 又发生了写操作, 导致lastWriteTime变到了A点.
              * Z,B两点的时长 = writerIdleTimeNanos
              * |<----------- writerIdleTimeNanos -----------|
@@ -585,7 +585,7 @@ __|____________|________________________|___________________|___________________
              *
              *
              *
-             * 情况三 : nextDelay <= 0 , 出现这种情况言外之意, 写已经空闲. 执行第600行代码, 重新将任务放入scheduledTaskQueue, (writerIdleTimeNanos = 1000) .
+             * 情况三 : nextDelay <= 0 , 出现这种情况言外之意, 写已经空闲. 执行第601行代码, 重新将任务放入scheduledTaskQueue, (writerIdleTimeNanos = 1000) .
              *
              * |<----------- writerIdleTimeNanos -----------|
              * |                                            |<-- -nextDelay -->|

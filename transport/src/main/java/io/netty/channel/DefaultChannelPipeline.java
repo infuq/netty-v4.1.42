@@ -981,8 +981,8 @@ public class DefaultChannelPipeline implements ChannelPipeline {
     }
 
     @Override
-    public final ChannelFuture bind(SocketAddress localAddress, ChannelPromise promise) {
-        return tail.bind(localAddress, promise);
+    public final ChannelFuture bind(SocketAddress localAddress, ChannelPromise bindFuture) {
+        return tail.bind(localAddress, bindFuture);
     }
 
     @Override
@@ -1343,8 +1343,8 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         // 绑定
         @Override
         public void bind(
-                ChannelHandlerContext ctx, SocketAddress localAddress, ChannelPromise promise) {
-            unsafe.bind(localAddress, promise);
+                ChannelHandlerContext ctx, SocketAddress localAddress, ChannelPromise bindFuture) {
+            unsafe.bind(localAddress, bindFuture);
         }
 
         @Override

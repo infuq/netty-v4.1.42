@@ -473,39 +473,39 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
     }
 
     @Override
-    public ChannelFuture bind(final SocketAddress localAddress, final ChannelPromise promise) {
+    public ChannelFuture bind(final SocketAddress localAddress, final ChannelPromise bindFuture) {
         if (localAddress == null) {
             throw new NullPointerException("localAddress");
         }
-        if (isNotValidPromise(promise, false)) {
+        if (isNotValidPromise(bindFuture, false)) {
             // cancelled
-            return promise;
+            return bindFuture;
         }
 
         final AbstractChannelHandlerContext next = findContextOutbound(MASK_BIND);
         EventExecutor executor = next.executor();
         if (executor.inEventLoop()) {
-            next.invokeBind(localAddress, promise);
+            next.invokeBind(localAddress, bindFuture);
         } else {
             safeExecute(executor, new Runnable() {
                 @Override
                 public void run() {
-                    next.invokeBind(localAddress, promise);
+                    next.invokeBind(localAddress, bindFuture);
                 }
-            }, promise, null);
+            }, bindFuture, null);
         }
-        return promise;
+        return bindFuture;
     }
 
-    private void invokeBind(SocketAddress localAddress, ChannelPromise promise) {
+    private void invokeBind(SocketAddress localAddress, ChannelPromise bindFuture) {
         if (invokeHandler()) {
             try {
-                ((ChannelOutboundHandler) handler()).bind(this, localAddress, promise);
+                ((ChannelOutboundHandler) handler()).bind(this, localAddress, bindFuture);
             } catch (Throwable t) {
-                notifyOutboundHandlerException(t, promise);
+                notifyOutboundHandlerException(t, bindFuture);
             }
         } else {
-            bind(localAddress, promise);
+            bind(localAddress, bindFuture);
         }
     }
 
