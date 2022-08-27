@@ -51,8 +51,8 @@ public class Server {
 //        System.out.println("heap address:\t 0x" + Long.toHexString(heap));
 
 
-        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(30 * 1024 * 1024);
-        ((DirectBuffer)byteBuffer).cleaner().clean();
+//        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(30 * 1024 * 1024);
+//        ((DirectBuffer)byteBuffer).cleaner().clean();
 
 //        System.out.println(ClassLayout.parseInstance(byteBuffer).toPrintable());
 
@@ -77,7 +77,7 @@ public class Server {
                         }
                     });
 
-            ChannelFuture bindFuture = serverBootstrap.bind("127.0.0.1", 8080);
+            ChannelFuture bindFuture = serverBootstrap.bind("127.0.0.1", 8081);
 
             bindFuture.addListener(new ChannelFutureListener() {
                 @Override
