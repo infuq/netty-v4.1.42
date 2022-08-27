@@ -11,17 +11,9 @@ import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
-import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import io.netty.util.internal.logging.Slf4JLoggerFactory;
-import org.openjdk.jol.info.ClassLayout;
 import org.openjdk.jol.vm.VM;
-import sun.nio.ch.DirectBuffer;
-
-import java.io.RandomAccessFile;
-import java.nio.ByteBuffer;
-import java.nio.MappedByteBuffer;
-import java.nio.channels.FileChannel;
 
 
 public class Server {
@@ -74,9 +66,10 @@ public class Server {
 
                             channelPipeline.addLast(new StringEncoder());
                             channelPipeline.addLast(new StringDecoder());
-                            channelPipeline.addLast("idleEventHandler", new IdleStateHandler(0, 0, 0));
-                            channelPipeline.addLast(businessGroup, new ServerHandler());
-                            channelPipeline.addAfter("idleEventHandler","loggingHandler",new LoggingHandler(LogLevel.INFO));
+//                            channelPipeline.addLast("idleEventHandler", new IdleStateHandler(0, 0, 15));
+                            channelPipeline.addLast(businessGroup, new ServerInHandler());
+                            channelPipeline.addLast(businessGroup, new ServerOutHandler());
+//                            channelPipeline.addAfter("idleEventHandler","loggingHandler",new LoggingHandler(LogLevel.INFO));
 
 
                         }
