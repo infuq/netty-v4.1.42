@@ -4,6 +4,7 @@ import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.nio.NioChannelOption;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.string.StringDecoder;
@@ -61,6 +62,10 @@ public class Server {
             serverBootstrap.group(bossGroup, workerGroup) // workerGroup会被 ServerBootstrapAcceptor 使用
                     .channel(NioServerSocketChannel.class)
                     .handler(new LoggingHandler(LogLevel.INFO))
+//                    .option(ChannelOption.SO_BACKLOG, 3)
+                    .option(NioChannelOption.SO_BACKLOG, 3)
+
+
                     .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT) // 会被 ServerBootstrapAcceptor 使用
                     .childHandler(new ChannelInitializer<NioSocketChannel>() {  // 会被 ServerBootstrapAcceptor 使用
                         @Override
