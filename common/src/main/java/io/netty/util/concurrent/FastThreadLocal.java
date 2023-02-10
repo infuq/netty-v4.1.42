@@ -44,6 +44,10 @@ import java.util.Set;
 public class FastThreadLocal<V> {
 
     private static final int variablesToRemoveIndex = InternalThreadLocalMap.nextVariableIndex();
+    static {
+        // 恒等式 variablesToRemoveIndex == 0
+        System.out.println("FastThreadLocal.variablesToRemoveIndex=" + variablesToRemoveIndex);
+    }
 
     /**
      * Removes all {@link FastThreadLocal} variables bound to the current thread.  This operation is useful when you
@@ -124,13 +128,16 @@ public class FastThreadLocal<V> {
     }
 
     // 自己添加的属性
-    private final int _index = 0;//2*128*1024;
-
+    private final int _index = 0;//= 369;
 
     private final int index;
 
     public FastThreadLocal() {
         index = InternalThreadLocalMap.nextVariableIndex() + _index;
+    }
+    // 自己添加的方法
+    public int getIndex() {
+        return index;
     }
 
     /**
@@ -138,12 +145,18 @@ public class FastThreadLocal<V> {
      */
     @SuppressWarnings("unchecked")
     public final V get() {
+        // 取出当前线程的InternalThreadLocalMap属性
         InternalThreadLocalMap threadLocalMap = InternalThreadLocalMap.get();
+
+        // 取出index位置的值
         Object v = threadLocalMap.indexedVariable(index);
+
+        // 如果index位置的值有效, 则直接返回
         if (v != InternalThreadLocalMap.UNSET) {
             return (V) v;
         }
 
+        // 给index位置赋值
         return initialize(threadLocalMap);
     }
 
@@ -179,12 +192,15 @@ public class FastThreadLocal<V> {
     private V initialize(InternalThreadLocalMap threadLocalMap) {
         V v = null;
         try {
+            //
             v = initialValue();
         } catch (Exception e) {
             PlatformDependent.throwException(e);
         }
-
+        // 给index位置赋值
         threadLocalMap.setIndexedVariable(index, v);
+
+        // 将此FastThreadLocal放到threadLocalMap的index=0的位置
         addToVariablesToRemove(threadLocalMap, this);
         return v;
     }
