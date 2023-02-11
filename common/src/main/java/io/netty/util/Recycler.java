@@ -157,6 +157,7 @@ public abstract class Recycler<T> {
         if (maxCapacityPerThread == 0) {
             return newObject((Handle<T>) NOOP_HANDLE);
         }
+        // 假设threadLocal的index=15, 那么在每个FastThreadLocalThread的InternalThreadLocalMap的indexedVariables[15]位置, 存放着各个线程的Stack
         Stack<T> stack = threadLocal.get();
         // Stack中存储DefaultHandle对象
         DefaultHandle<T> handle = stack.pop();
@@ -234,6 +235,9 @@ public abstract class Recycler<T> {
             return new WeakHashMap<Stack<?>, WeakOrderQueue>();
         }
     };
+    static {
+        System.out.println("DELAYED_RECYCLED.index值=" + DELAYED_RECYCLED.getIndex());
+    }
 
     // a queue that makes only moderate guarantees about visibility: items are seen in the correct order,
     // but we aren't absolutely guaranteed to ever see anything at all, thereby keeping the queue cheap to maintain
@@ -322,6 +326,7 @@ public abstract class Recycler<T> {
             // the WeakHashMap as key. So just store the enclosed AtomicInteger which should allow to have the
             // Stack itself GCed.
             head = new Head(stack.availableSharedCapacity);
+            // 初始时首尾指向同一个Link
             head.link = tail;
             owner = new WeakReference<Thread>(thread);
         }
@@ -641,7 +646,7 @@ public abstract class Recycler<T> {
                     return;
                 }
                 // Check if we already reached the maximum number of delayed queues and if we can allocate at all.
-                // 创建queue,同时链接到链表上(会加锁)
+                // 创建一个WeakOrderQueue,同时链接到Stack的链表上(会加锁)
                 if ((queue = WeakOrderQueue.allocate(this, thread)) == null) {
                     // drop object
                     return;
