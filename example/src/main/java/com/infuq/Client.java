@@ -15,7 +15,7 @@ public class Client {
     private Bootstrap bootstrap = new Bootstrap();
 
     private String serverIP = "127.0.0.1";
-    private Integer port = 8080;
+    private Integer port = 8081;
 
 
     public static void main(String[] args) {
@@ -29,7 +29,9 @@ public class Client {
 
         init();
         doConnect();
-
+        try {
+            System.in.read();
+        } catch (Exception ignored) {}
     }
 
 

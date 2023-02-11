@@ -136,6 +136,12 @@ public class NioSctpServerChannel extends AbstractNioMessageChannel
 
     @Override
     protected int doReadMessages(List<Object> buf) throws Exception {
+
+//        if (1==1) {
+//            System.out.println("Not accept...");
+//            return 0;
+//        }
+
         SctpChannel ch = javaChannel().accept();
         if (ch == null) {
             return 0;
