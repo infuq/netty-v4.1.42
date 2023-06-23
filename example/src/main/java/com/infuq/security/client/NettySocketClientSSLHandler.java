@@ -3,7 +3,7 @@ package com.infuq.security.client;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
-public class NettySocketSSLHandler extends SimpleChannelInboundHandler<String> {
+public class NettySocketClientSSLHandler extends SimpleChannelInboundHandler<String> {
 
 
     @Override

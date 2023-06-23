@@ -33,7 +33,7 @@ public class NettySocketClient {
 
                             pipeline.addLast("decoder", new StringDecoder());
                             pipeline.addLast("encoder", new StringEncoder());
-                            pipeline.addLast("handler", new NettySocketSSLHandler());
+                            pipeline.addLast("handler", new NettySocketClientSSLHandler());
 
                             SSLEngine engine = ContextSSLFactory.selectSslContextClient().createSSLEngine();
                             engine.setUseClientMode(true);

@@ -6,7 +6,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.KeyStore;
-import java.security.NoSuchAlgorithmException;
 
 
 
@@ -14,30 +13,30 @@ public class ContextSSLFactory {
 
     private static final SSLContext SSLContextServer;
     private static final SSLContext SSLContextClient;
+
     static {
         SSLContext sslContextServer = null;
         SSLContext sslContextClient = null;
         try {
             sslContextServer = SSLContext.getInstance("SSLv3");
             sslContextClient = SSLContext.getInstance("SSLv3");
-        } catch(NoSuchAlgorithmException e1) {
-            e1.printStackTrace();
-        }
-        try {
+
             if(getKeyManagersServer() != null && getTrustManagersServer() != null) {
                 sslContextServer.init(getKeyManagersServer(), getTrustManagersServer(), null);
             }
             if(getKeyManagersClient() != null && getTrustManagersClient() != null) {
                 sslContextClient.init(getKeyManagersClient(), getTrustManagersClient(), null);
             }
-        } catch(Exception e) {
-            e.printStackTrace();
-        }
-        sslContextServer.createSSLEngine().getSupportedCipherSuites();
-        sslContextClient.createSSLEngine().getSupportedCipherSuites();
+
+            sslContextServer.createSSLEngine().getSupportedCipherSuites();
+            sslContextClient.createSSLEngine().getSupportedCipherSuites();
+
+        } catch(Exception ignored) { }
 
         SSLContextServer = sslContextServer;
         SSLContextClient = sslContextClient;
+
+
     }
 
     public ContextSSLFactory() {}
@@ -55,7 +54,7 @@ public class ContextSSLFactory {
         TrustManagerFactory keyFac;
         TrustManager[] kms = null;
         try {
-            // 获得KeyManagerFactory对象. 初始化位默认算法
+            // 获得KeyManagerFactory对象. 初始化为默认算法
             keyFac = TrustManagerFactory.getInstance("SunX509");
             File file = new File("/home/v-infuq/tmp/ssl/foo.jks");
             is = new FileInputStream(file);
@@ -64,8 +63,8 @@ public class ContextSSLFactory {
             ks.load(is, keyStorePass.toCharArray());
             keyFac.init(ks);
             kms = keyFac.getTrustManagers();
-        } catch(Exception e) {
-            e.printStackTrace();
+        } catch(Exception ignored) {
+
         } finally {
             if (is != null) {
                 try {
@@ -85,7 +84,7 @@ public class ContextSSLFactory {
         TrustManagerFactory keyFac;
         TrustManager[] kms = null;
         try {
-            // 获得KeyManagerFactory对象. 初始化位默认算法
+            // 获得KeyManagerFactory对象. 初始化为默认算法
             keyFac = TrustManagerFactory.getInstance("SunX509");
             File file = new File("/home/v-infuq/tmp/ssl/bar.jks");
             is = new FileInputStream(file);
@@ -94,8 +93,8 @@ public class ContextSSLFactory {
             ks.load(is, keyStorePass.toCharArray());
             keyFac.init(ks);
             kms = keyFac.getTrustManagers();
-        } catch(Exception e) {
-            e.printStackTrace();
+        } catch(Exception ignored) {
+
         } finally {
             if (is != null) {
                 try {
@@ -114,7 +113,7 @@ public class ContextSSLFactory {
         KeyManagerFactory keyFac;
         KeyManager[] kms = null;
         try {
-            // 获得KeyManagerFactory对象. 初始化位默认算法
+            // 获得KeyManagerFactory对象. 初始化为默认算法
             keyFac = KeyManagerFactory.getInstance("SunX509");
             File file = new File("/home/v-infuq/tmp/ssl/foo.jks");
             is = new FileInputStream(file);
@@ -123,8 +122,8 @@ public class ContextSSLFactory {
             ks.load(is, keyStorePass.toCharArray());
             keyFac.init(ks, keyStorePass.toCharArray());
             kms = keyFac.getKeyManagers();
-        } catch(Exception e) {
-            e.printStackTrace();
+        } catch(Exception ignored) {
+
         } finally {
             if (is != null) {
                 try {
@@ -144,7 +143,7 @@ public class ContextSSLFactory {
         KeyManagerFactory keyFac;
         KeyManager[] kms = null;
         try {
-            // 获得KeyManagerFactory对象. 初始化位默认算法
+            // 获得KeyManagerFactory对象. 初始化为默认算法
             keyFac = KeyManagerFactory.getInstance("SunX509");
             File file = new File("/home/v-infuq/tmp/ssl/bar.jks");
             is = new FileInputStream(file);
@@ -153,8 +152,8 @@ public class ContextSSLFactory {
             ks.load(is, keyStorePass.toCharArray());
             keyFac.init(ks, keyStorePass.toCharArray());
             kms = keyFac.getKeyManagers();
-        } catch(Exception e) {
-            e.printStackTrace();
+        } catch(Exception ignored) {
+
         } finally {
             if (is != null) {
                 try {

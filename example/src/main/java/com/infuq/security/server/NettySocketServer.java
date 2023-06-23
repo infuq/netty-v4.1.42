@@ -28,16 +28,16 @@ public class NettySocketServer {
                     .channel(NioServerSocketChannel.class)
                     .option(ChannelOption.SO_BACKLOG, 128)
                     .option(ChannelOption.SO_KEEPALIVE, true)
-                    .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 1000 * 5 * 60).
-                    handler(new LoggingHandler(LogLevel.DEBUG)).
-                    childHandler(new ChannelInitializer<SocketChannel>() {
+                    .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 1000 * 5 * 60)
+                    .handler(new LoggingHandler(LogLevel.DEBUG))
+                    .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         protected void initChannel(SocketChannel socketChannel) throws Exception {
                             ChannelPipeline pipeline = socketChannel.pipeline();
 
                             pipeline.addLast("decoder", new StringDecoder());
                             pipeline.addLast("encoder", new StringEncoder());
-                            pipeline.addLast("handler", new NettySocketSSLHandler());
+                            pipeline.addLast("handler", new NettySocketServerSSLHandler());
 
                             SSLEngine engine = ContextSSLFactory.selectSslContextServer().createSSLEngine();
                             engine.setUseClientMode(false);
@@ -45,8 +45,10 @@ public class NettySocketServer {
                             pipeline.addFirst("ssl", new SslHandler(engine));
                         }
                     });
+
             serverStrap.bind(8081).sync();
-            System.out.println("服务已开启");
+            System.out.println("Server start success...");
+
         } catch(Exception e) {
             e.printStackTrace();
             bossGroup.shutdownGracefully();

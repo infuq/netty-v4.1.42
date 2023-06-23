@@ -7,10 +7,8 @@ import io.netty.handler.ssl.SslHandler;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
 
-import java.net.InetAddress;
 
-
-public class NettySocketSSLHandler extends SimpleChannelInboundHandler<String> {
+public class NettySocketServerSSLHandler extends SimpleChannelInboundHandler<String> {
 
 
     @Override
@@ -31,6 +29,13 @@ public class NettySocketSSLHandler extends SimpleChannelInboundHandler<String> {
     }
 
     @Override
+    protected void channelRead0(ChannelHandlerContext ctx, String msg) throws Exception {
+        System.out.println("Server receive msg:" + msg);
+        ctx.fireChannelRead(msg);
+    }
+
+
+    @Override
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
         System.out.println("NettySocketSSLHandler#handlerAdded");
     }
@@ -46,11 +51,7 @@ public class NettySocketSSLHandler extends SimpleChannelInboundHandler<String> {
         ctx.close();
     }
 
-    @Override
-    protected void channelRead0(ChannelHandlerContext ctx, String msg) throws Exception {
-        System.out.println("Server receive msg:" + msg);
-        ctx.fireChannelRead(msg);
-    }
+
 
 
 }
