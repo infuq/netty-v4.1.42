@@ -35,19 +35,18 @@ public class HostsFileParserTest {
 
     @Test
     public void testParse() throws IOException {
-        String hostsString = new StringBuilder()
-                .append("127.0.0.1 host1").append("\n") // single hostname, separated with blanks
-                .append("::1 host1").append("\n") // same as above, but IPv6
-                .append("\n") // empty line
-                .append("192.168.0.1\thost2").append("\n") // single hostname, separated with tabs
-                .append("#comment").append("\n") // comment at the beginning of the line
-                .append(" #comment  ").append("\n") // comment in the middle of the line
-                .append("192.168.0.2  host3  #comment").append("\n") // comment after hostname
-                .append("192.168.0.3  host4  host5 host6").append("\n") // multiple aliases
-                .append("192.168.0.4  host4").append("\n") // host mapped to a second address, must be ignored
-                .append("192.168.0.5  HOST7").append("\n") // uppercase host, should match lowercase host
-                .append("192.168.0.6  host7").append("\n") // should be ignored since we have the uppercase host already
-                .toString();
+        String hostsString = "127.0.0.1 host1" + "\n" + // single hostname, separated with blanks
+                "::1 host1" + "\n" + // same as above, but IPv6
+                "\n" + // empty line
+                "192.168.0.1\thost2" + "\n" + // single hostname, separated with tabs
+                "#comment" + "\n" + // comment at the beginning of the line
+                " #comment  " + "\n" + // comment in the middle of the line
+                "192.168.0.2  host3  #comment" + "\n" + // comment after hostname
+                "192.168.0.3  host4  host5 host6" + "\n" + // multiple aliases
+                "192.168.0.4  host4" + "\n" + // host mapped to a second address, must be ignored
+                "192.168.0.5  HOST7" + "\n" + // uppercase host, should match lowercase host
+                "192.168.0.6  host7" + "\n" // should be ignored since we have the uppercase host already
+                ;
 
         HostsFileEntries entries = HostsFileParser.parse(new BufferedReader(new StringReader(hostsString)));
         Map<String, Inet4Address> inet4Entries = entries.inet4Entries();

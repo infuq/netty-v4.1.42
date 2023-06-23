@@ -810,7 +810,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
     @Override
     public ChannelFuture writeAndFlush(Object msg) {
         ChannelPromise channelPromise = newPromise();
-        System.out.println(Thread.currentThread().getName() + "创建一个ChannelPromise[" + channelPromise.hashCode() + "]");
+//        System.out.println("线程:" + Thread.currentThread().getName() + "创建一个ChannelPromise[" + channelPromise.hashCode() + "]");
         return writeAndFlush(msg, channelPromise);
     }
 

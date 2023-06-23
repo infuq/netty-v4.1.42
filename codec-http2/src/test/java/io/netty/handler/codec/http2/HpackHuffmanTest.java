@@ -144,7 +144,7 @@ public class HpackHuffmanTest {
 
             byte[] actualBytes = decode(bytes);
 
-            Assert.assertTrue(Arrays.equals(buf, actualBytes));
+            Assert.assertArrayEquals(buf, actualBytes);
         } finally {
             buffer.release();
         }

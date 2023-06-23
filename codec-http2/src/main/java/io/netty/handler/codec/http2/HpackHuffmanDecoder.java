@@ -4660,9 +4660,9 @@ final class HpackHuffmanDecoder implements ByteProcessor {
             (0 << 16) + (HUFFMAN_FAIL << 8) + 0,
             (0 << 16) + (HUFFMAN_FAIL << 8) + 0,
             (0 << 16) + (HUFFMAN_FAIL << 8) + 0,
-            (0 << 16) + (HUFFMAN_FAIL << 8) + 0,
-            (0 << 16) + (HUFFMAN_FAIL << 8) + 0,
-            (0 << 16) + (HUFFMAN_FAIL << 8) + 0,
+            (HUFFMAN_FAIL << 8),
+            (HUFFMAN_FAIL << 8),
+            (HUFFMAN_FAIL << 8),
     };
 
     private static final Http2Exception BAD_ENCODING = ThrowableUtil.unknownStackTrace(

@@ -143,10 +143,10 @@ public class SslHandlerTest {
             writeCauseLatch.await();
             Throwable writeCause = failureRef.get();
             assertNotNull(writeCause);
-            assertThat(writeCause, is(CoreMatchers.<Throwable>instanceOf(SSLException.class)));
+            assertThat(writeCause, is(CoreMatchers.instanceOf(SSLException.class)));
             Throwable cause = handler.handshakeFuture().cause();
             assertNotNull(cause);
-            assertThat(cause, is(CoreMatchers.<Throwable>instanceOf(SSLException.class)));
+            assertThat(cause, is(CoreMatchers.instanceOf(SSLException.class)));
         } finally {
             assertFalse(ch.finishAndReleaseAll());
         }
@@ -817,7 +817,7 @@ public class SslHandlerTest {
                 throw error;
             }
             assertThat(sslHandler.handshakeFuture().await().cause(),
-                       CoreMatchers.<Throwable>instanceOf(SSLException.class));
+                       CoreMatchers.instanceOf(SSLException.class));
         } finally {
             if (cc != null) {
                 cc.close().syncUninterruptibly();
@@ -889,7 +889,7 @@ public class SslHandlerTest {
             cc = future.syncUninterruptibly().channel();
 
             Throwable cause = sslHandler.handshakeFuture().await().cause();
-            assertThat(cause, CoreMatchers.<Throwable>instanceOf(SSLException.class));
+            assertThat(cause, CoreMatchers.instanceOf(SSLException.class));
             assertThat(cause.getMessage(), containsString("timed out"));
         } finally {
             if (cc != null) {
@@ -1046,12 +1046,12 @@ public class SslHandlerTest {
 
             if (client) {
                 Throwable cause = clientSslHandler.handshakeFuture().await().cause();
-                assertThat(cause, CoreMatchers.<Throwable>instanceOf(SSLException.class));
+                assertThat(cause, CoreMatchers.instanceOf(SSLException.class));
                 assertThat(cause.getMessage(), containsString("timed out"));
                 assertFalse(serverSslHandler.handshakeFuture().await().isSuccess());
             } else {
                 Throwable cause = serverSslHandler.handshakeFuture().await().cause();
-                assertThat(cause, CoreMatchers.<Throwable>instanceOf(SSLException.class));
+                assertThat(cause, CoreMatchers.instanceOf(SSLException.class));
                 assertThat(cause.getMessage(), containsString("timed out"));
                 assertFalse(clientSslHandler.handshakeFuture().await().isSuccess());
             }

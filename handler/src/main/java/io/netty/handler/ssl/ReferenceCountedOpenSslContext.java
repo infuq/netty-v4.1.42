@@ -622,15 +622,15 @@ public abstract class ReferenceCountedOpenSslContext extends SslContext implemen
                                         config);
                             default:
                                 throw new UnsupportedOperationException(
-                                        new StringBuilder("OpenSSL provider does not support ")
-                                                .append(config.selectorFailureBehavior())
-                                                .append(" behavior").toString());
+                                        "OpenSSL provider does not support " +
+                                                config.selectorFailureBehavior() +
+                                                " behavior");
                         }
                     default:
                         throw new UnsupportedOperationException(
-                                new StringBuilder("OpenSSL provider does not support ")
-                                        .append(config.selectedListenerFailureBehavior())
-                                        .append(" behavior").toString());
+                                "OpenSSL provider does not support " +
+                                        config.selectedListenerFailureBehavior() +
+                                        " behavior");
                 }
             default:
                 throw new Error();

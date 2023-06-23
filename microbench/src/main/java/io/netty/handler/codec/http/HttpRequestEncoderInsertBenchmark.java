@@ -34,9 +34,9 @@ import static io.netty.handler.codec.http.HttpConstants.*;
 @Measurement(iterations = 20)
 public class HttpRequestEncoderInsertBenchmark extends AbstractMicrobenchmark {
 
-    private String uri = "http://localhost?eventType=CRITICAL&from=0&to=1497437160327&limit=10&offset=0";
-    private OldHttpRequestEncoder encoderOld = new OldHttpRequestEncoder();
-    private HttpRequestEncoder encoderNew = new HttpRequestEncoder();
+    private final String uri = "http://localhost?eventType=CRITICAL&from=0&to=1497437160327&limit=10&offset=0";
+    private final OldHttpRequestEncoder encoderOld = new OldHttpRequestEncoder();
+    private final HttpRequestEncoder encoderNew = new HttpRequestEncoder();
 
     @Benchmark
     public ByteBuf oldEncoder() throws Exception {
@@ -98,11 +98,10 @@ public class HttpRequestEncoderInsertBenchmark extends AbstractMicrobenchmark {
                     } else {
                         if (uri.lastIndexOf(SLASH, index) <= startIndex) {
                             int len = uri.length();
-                            StringBuilder sb = new StringBuilder(len + 1);
-                            sb.append(uri, 0, index)
-                                    .append(SLASH)
-                                    .append(uri, index, len);
-                            uri = sb.toString();
+                            String sb = uri.substring(0, index) +
+                                    SLASH +
+                                    uri.substring(index, len);
+                            uri = sb;
                         }
                     }
                 }

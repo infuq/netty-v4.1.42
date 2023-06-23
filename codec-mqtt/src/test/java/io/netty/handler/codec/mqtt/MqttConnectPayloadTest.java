@@ -94,7 +94,7 @@ public class MqttConnectPayloadTest {
     /* See https://github.com/netty/netty/pull/9202 */
     @Test
     public void testEmptyTopicsToString() {
-        new MqttSubscribePayload(Collections.<MqttTopicSubscription>emptyList()).toString();
-        new MqttUnsubscribePayload(Collections.<String>emptyList()).toString();
+        new MqttSubscribePayload(Collections.emptyList()).toString();
+        new MqttUnsubscribePayload(Collections.emptyList()).toString();
     }
 }

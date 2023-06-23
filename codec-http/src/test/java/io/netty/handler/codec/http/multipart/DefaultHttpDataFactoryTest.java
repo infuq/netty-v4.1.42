@@ -44,7 +44,7 @@ public class DefaultHttpDataFactoryTest {
     public static void assertReq1EqualsReq2() {
         // Before doing anything, assert that the requests are equal
         assertEquals(req1.hashCode(), req2.hashCode());
-        assertTrue(req1.equals(req2));
+        assertEquals(req1, req2);
     }
 
     @Before
@@ -117,9 +117,9 @@ public class DefaultHttpDataFactoryTest {
 
         // Before doing anything, assert that the data items are equal
         assertEquals(attribute1.hashCode(), attribute2.hashCode());
-        assertTrue(attribute1.equals(attribute2));
+        assertEquals(attribute1, attribute2);
         assertEquals(file1.hashCode(), file2.hashCode());
-        assertTrue(file1.equals(file2));
+        assertEquals(file1, file2);
 
         // Remove attribute2 and file2 from being cleaned up by factory
         factory.removeHttpDataFromClean(req1, attribute2);

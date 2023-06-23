@@ -26,6 +26,7 @@ import org.junit.Test;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ExecutionException;
 
 import static org.hamcrest.Matchers.instanceOf;
@@ -52,7 +53,7 @@ public class HttpRequestEncoderTest {
             HttpRequestEncoder encoder = new HttpRequestEncoder();
             encoder.encodeInitialLine(buffer, new DefaultHttpRequest(HttpVersion.HTTP_1_1,
                     HttpMethod.GET, "http://localhost"));
-            String req = buffer.toString(Charset.forName("US-ASCII"));
+            String req = buffer.toString(StandardCharsets.US_ASCII);
             assertEquals("GET http://localhost/ HTTP/1.1\r\n", req);
             buffer.release();
         }
@@ -64,7 +65,7 @@ public class HttpRequestEncoderTest {
             HttpRequestEncoder encoder = new HttpRequestEncoder();
             encoder.encodeInitialLine(buffer, new DefaultHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET,
                     "http://localhost:9999?p1=v1"));
-            String req = buffer.toString(Charset.forName("US-ASCII"));
+            String req = buffer.toString(StandardCharsets.US_ASCII);
             assertEquals("GET http://localhost:9999/?p1=v1 HTTP/1.1\r\n", req);
             buffer.release();
         }
@@ -76,7 +77,7 @@ public class HttpRequestEncoderTest {
             HttpRequestEncoder encoder = new HttpRequestEncoder();
             encoder.encodeInitialLine(buffer, new DefaultHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET,
                     "http://localhost:9999/?p1=v1"));
-            String req = buffer.toString(Charset.forName("US-ASCII"));
+            String req = buffer.toString(StandardCharsets.US_ASCII);
             assertEquals("GET http://localhost:9999/?p1=v1 HTTP/1.1\r\n", req);
             buffer.release();
         }
@@ -88,7 +89,7 @@ public class HttpRequestEncoderTest {
             HttpRequestEncoder encoder = new HttpRequestEncoder();
             encoder.encodeInitialLine(buffer, new DefaultHttpRequest(HttpVersion.HTTP_1_1,
                     HttpMethod.GET, "http://localhost/"));
-            String req = buffer.toString(Charset.forName("US-ASCII"));
+            String req = buffer.toString(StandardCharsets.US_ASCII);
             assertEquals("GET http://localhost/ HTTP/1.1\r\n", req);
             buffer.release();
         }
@@ -100,7 +101,7 @@ public class HttpRequestEncoderTest {
             HttpRequestEncoder encoder = new HttpRequestEncoder();
             encoder.encodeInitialLine(buffer, new DefaultHttpRequest(HttpVersion.HTTP_1_1,
                     HttpMethod.GET, "/"));
-            String req = buffer.toString(Charset.forName("US-ASCII"));
+            String req = buffer.toString(StandardCharsets.US_ASCII);
             assertEquals("GET / HTTP/1.1\r\n", req);
             buffer.release();
         }
@@ -112,7 +113,7 @@ public class HttpRequestEncoderTest {
             HttpRequestEncoder encoder = new HttpRequestEncoder();
             encoder.encodeInitialLine(buffer, new DefaultHttpRequest(HttpVersion.HTTP_1_1,
                     HttpMethod.GET, ""));
-            String req = buffer.toString(Charset.forName("US-ASCII"));
+            String req = buffer.toString(StandardCharsets.US_ASCII);
             assertEquals("GET / HTTP/1.1\r\n", req);
             buffer.release();
         }
@@ -124,7 +125,7 @@ public class HttpRequestEncoderTest {
             HttpRequestEncoder encoder = new HttpRequestEncoder();
             encoder.encodeInitialLine(buffer, new DefaultHttpRequest(HttpVersion.HTTP_1_1,
                     HttpMethod.GET, "/?url=http://example.com"));
-            String req = buffer.toString(Charset.forName("US-ASCII"));
+            String req = buffer.toString(StandardCharsets.US_ASCII);
             assertEquals("GET /?url=http://example.com HTTP/1.1\r\n", req);
             buffer.release();
         }

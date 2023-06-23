@@ -617,12 +617,12 @@ public class TrafficCounter {
 
     @Override
     public String toString() {
-        return new StringBuilder(165).append("Monitor ").append(name)
-                .append(" Current Speed Read: ").append(lastReadThroughput >> 10).append(" KB/s, ")
-                .append("Asked Write: ").append(lastWriteThroughput >> 10).append(" KB/s, ")
-                .append("Real Write: ").append(realWriteThroughput >> 10).append(" KB/s, ")
-                .append("Current Read: ").append(currentReadBytes.get() >> 10).append(" KB, ")
-                .append("Current asked Write: ").append(currentWrittenBytes.get() >> 10).append(" KB, ")
-                .append("Current real Write: ").append(realWrittenBytes.get() >> 10).append(" KB").toString();
+        return "Monitor " + name +
+                " Current Speed Read: " + (lastReadThroughput >> 10) + " KB/s, " +
+                "Asked Write: " + (lastWriteThroughput >> 10) + " KB/s, " +
+                "Real Write: " + (realWriteThroughput >> 10) + " KB/s, " +
+                "Current Read: " + (currentReadBytes.get() >> 10) + " KB, " +
+                "Current asked Write: " + (currentWrittenBytes.get() >> 10) + " KB, " +
+                "Current real Write: " + (realWrittenBytes.get() >> 10) + " KB";
     }
 }

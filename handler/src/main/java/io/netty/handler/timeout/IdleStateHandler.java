@@ -442,9 +442,7 @@ public class IdleStateHandler extends ChannelDuplexHandler {
                 if (flushProgress != lastFlushProgress) {
                     lastFlushProgress = flushProgress;
 
-                    if (!first) {
-                        return true;
-                    }
+                    return !first;
                 }
             }
         }

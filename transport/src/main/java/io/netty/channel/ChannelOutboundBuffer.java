@@ -268,7 +268,7 @@ public final class ChannelOutboundBuffer {
             // only release message, notify and decrement if it was not canceled before.
             ReferenceCountUtil.safeRelease(msg);
             // 回调Listener
-            System.out.println(Thread.currentThread().getName() + "准备回调ChannelPromise[" + promise.hashCode() + "]的监听");
+//            System.out.println("线程:" + Thread.currentThread().getName() + "准备回调ChannelPromise[" + promise.hashCode() + "]的监听");
             safeSuccess(promise);
             decrementPendingOutboundBytes(size, false, true);
         }

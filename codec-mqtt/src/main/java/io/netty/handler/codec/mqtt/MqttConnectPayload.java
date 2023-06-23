@@ -101,14 +101,13 @@ public final class MqttConnectPayload {
 
     @Override
     public String toString() {
-        return new StringBuilder(StringUtil.simpleClassName(this))
-            .append('[')
-            .append("clientIdentifier=").append(clientIdentifier)
-            .append(", willTopic=").append(willTopic)
-            .append(", willMessage=").append(Arrays.toString(willMessage))
-            .append(", userName=").append(userName)
-            .append(", password=").append(Arrays.toString(password))
-            .append(']')
-            .toString();
+        return StringUtil.simpleClassName(this) +
+                '[' +
+                "clientIdentifier=" + clientIdentifier +
+                ", willTopic=" + willTopic +
+                ", willMessage=" + Arrays.toString(willMessage) +
+                ", userName=" + userName +
+                ", password=" + Arrays.toString(password) +
+                ']';
     }
 }

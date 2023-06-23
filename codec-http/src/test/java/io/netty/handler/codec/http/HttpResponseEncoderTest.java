@@ -282,14 +282,14 @@ public class HttpResponseEncoderTest {
 
         ByteBuf buffer = channel.readOutbound();
         StringBuilder responseText = new StringBuilder();
-        responseText.append(HttpVersion.HTTP_1_1.toString()).append(' ').append(status.toString()).append("\r\n");
+        responseText.append(HttpVersion.HTTP_1_1).append(' ').append(status.toString()).append("\r\n");
         if (!headerStripped && headerName != null) {
             responseText.append(headerName).append(": ");
 
             if (HttpHeaderNames.CONTENT_LENGTH.contentEquals(headerName)) {
                 responseText.append('0');
             } else {
-                responseText.append(HttpHeaderValues.CHUNKED.toString());
+                responseText.append(HttpHeaderValues.CHUNKED);
             }
             responseText.append("\r\n");
         }
@@ -378,11 +378,10 @@ public class HttpResponseEncoderTest {
         assertTrue(channel.writeOutbound(new DefaultHttpContent(content)));
         assertTrue(channel.writeOutbound(LastHttpContent.EMPTY_LAST_CONTENT));
 
-        StringBuilder responseText = new StringBuilder();
-        responseText.append(HttpVersion.HTTP_1_1.toString()).append(' ')
-                .append(HttpResponseStatus.RESET_CONTENT.toString()).append("\r\n");
-        responseText.append(HttpHeaderNames.CONTENT_LENGTH).append(": 0\r\n");
-        responseText.append("\r\n");
+        String responseText = String.valueOf(HttpVersion.HTTP_1_1) + ' ' +
+                HttpResponseStatus.RESET_CONTENT + "\r\n" +
+                HttpHeaderNames.CONTENT_LENGTH + ": 0\r\n" +
+                "\r\n";
 
         StringBuilder written = new StringBuilder();
         for (;;) {
@@ -394,7 +393,7 @@ public class HttpResponseEncoderTest {
             buffer.release();
         }
 
-        assertEquals(responseText.toString(), written.toString());
+        assertEquals(responseText, written.toString());
         assertFalse(channel.finish());
     }
 }

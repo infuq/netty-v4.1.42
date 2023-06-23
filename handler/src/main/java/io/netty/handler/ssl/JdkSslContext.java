@@ -390,8 +390,8 @@ public class JdkSslContext extends SslContext {
                 case NO_ADVERTISE:
                     return new JdkAlpnApplicationProtocolNegotiator(false, config.supportedProtocols());
                 default:
-                    throw new UnsupportedOperationException(new StringBuilder("JDK provider does not support ")
-                    .append(config.selectorFailureBehavior()).append(" failure behavior").toString());
+                    throw new UnsupportedOperationException("JDK provider does not support " +
+                            config.selectorFailureBehavior() + " failure behavior");
                 }
             } else {
                 switch(config.selectedListenerFailureBehavior()) {
@@ -400,8 +400,8 @@ public class JdkSslContext extends SslContext {
                 case FATAL_ALERT:
                     return new JdkAlpnApplicationProtocolNegotiator(true, config.supportedProtocols());
                 default:
-                    throw new UnsupportedOperationException(new StringBuilder("JDK provider does not support ")
-                    .append(config.selectedListenerFailureBehavior()).append(" failure behavior").toString());
+                    throw new UnsupportedOperationException("JDK provider does not support " +
+                            config.selectedListenerFailureBehavior() + " failure behavior");
                 }
             }
         case NPN:
@@ -412,8 +412,8 @@ public class JdkSslContext extends SslContext {
                 case FATAL_ALERT:
                     return new JdkNpnApplicationProtocolNegotiator(true, config.supportedProtocols());
                 default:
-                    throw new UnsupportedOperationException(new StringBuilder("JDK provider does not support ")
-                    .append(config.selectedListenerFailureBehavior()).append(" failure behavior").toString());
+                    throw new UnsupportedOperationException("JDK provider does not support " +
+                            config.selectedListenerFailureBehavior() + " failure behavior");
                 }
             } else {
                 switch(config.selectorFailureBehavior()) {
@@ -422,13 +422,13 @@ public class JdkSslContext extends SslContext {
                 case NO_ADVERTISE:
                     return new JdkNpnApplicationProtocolNegotiator(false, config.supportedProtocols());
                 default:
-                    throw new UnsupportedOperationException(new StringBuilder("JDK provider does not support ")
-                    .append(config.selectorFailureBehavior()).append(" failure behavior").toString());
+                    throw new UnsupportedOperationException("JDK provider does not support " +
+                            config.selectorFailureBehavior() + " failure behavior");
                 }
             }
         default:
-            throw new UnsupportedOperationException(new StringBuilder("JDK provider does not support ")
-            .append(config.protocol()).append(" protocol").toString());
+            throw new UnsupportedOperationException("JDK provider does not support " +
+                    config.protocol() + " protocol");
         }
     }
 

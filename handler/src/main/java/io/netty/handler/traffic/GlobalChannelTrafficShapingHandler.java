@@ -769,8 +769,8 @@ public class GlobalChannelTrafficShapingHandler extends AbstractTrafficShapingHa
 
     @Override
     public String toString() {
-        return new StringBuilder(340).append(super.toString())
-            .append(" Write Channel Limit: ").append(writeChannelLimit)
-            .append(" Read Channel Limit: ").append(readChannelLimit).toString();
+        return super.toString() +
+                " Write Channel Limit: " + writeChannelLimit +
+                " Read Channel Limit: " + readChannelLimit;
     }
 }

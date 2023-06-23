@@ -18,6 +18,8 @@ package io.netty.handler.codec.spdy;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 
+import java.nio.charset.StandardCharsets;
+
 import static io.netty.handler.codec.spdy.SpdyCodecUtil.*;
 
 public class SpdyHeaderBlockRawDecoder extends SpdyHeaderBlockDecoder {
@@ -136,7 +138,7 @@ public class SpdyHeaderBlockRawDecoder extends SpdyHeaderBlockDecoder {
 
                     byte[] nameBytes = new byte[length];
                     headerBlock.readBytes(nameBytes);
-                    name = new String(nameBytes, "UTF-8");
+                    name = new String(nameBytes, StandardCharsets.UTF_8);
 
                     // Check for identically named headers
                     if (frame.headers().contains(name)) {
@@ -226,7 +228,7 @@ public class SpdyHeaderBlockRawDecoder extends SpdyHeaderBlockDecoder {
                                 break;
                             }
                         }
-                        String value = new String(valueBytes, offset, index - offset, "UTF-8");
+                        String value = new String(valueBytes, offset, index - offset, StandardCharsets.UTF_8);
 
                         try {
                             frame.headers().add(name, value);

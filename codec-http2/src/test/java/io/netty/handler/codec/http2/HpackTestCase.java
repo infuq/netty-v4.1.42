@@ -230,7 +230,7 @@ final class HpackTestCase {
     }
 
     static class HeaderBlock {
-        private int maxHeaderTableSize = -1;
+        private final int maxHeaderTableSize = -1;
         private byte[] encodedBytes;
         private List<String> encoded;
         private List<HpackHeaderField> headers;

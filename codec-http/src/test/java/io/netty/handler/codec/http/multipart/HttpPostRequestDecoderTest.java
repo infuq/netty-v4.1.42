@@ -348,7 +348,7 @@ public class HttpPostRequestDecoderTest {
                         data + "\r\n" +
                         "--" + boundary + "--\r\n";
 
-        req.content().writeBytes(body.getBytes(CharsetUtil.UTF_8.name()));
+        req.content().writeBytes(body.getBytes(CharsetUtil.UTF_8));
         // Create decoder instance to test.
         final HttpPostRequestDecoder decoder = new HttpPostRequestDecoder(inMemoryFactory, req);
         assertFalse(decoder.getBodyHttpDatas().isEmpty());
@@ -373,7 +373,7 @@ public class HttpPostRequestDecoderTest {
                 data + "\r\n" +
                 "--" + boundary + "--\r\n";
 
-        req.content().writeBytes(body.getBytes(CharsetUtil.UTF_8.name()));
+        req.content().writeBytes(body.getBytes(CharsetUtil.UTF_8));
         // Create decoder instance to test.
         final HttpPostRequestDecoder decoder = new HttpPostRequestDecoder(inMemoryFactory, req);
         assertFalse(decoder.getBodyHttpDatas().isEmpty());
@@ -442,7 +442,7 @@ public class HttpPostRequestDecoderTest {
         assertTrue("the item should be a FileUpload", part1 instanceof FileUpload);
         FileUpload fileUpload = (FileUpload) part1;
         byte[] fileBytes = fileUpload.get();
-        assertTrue("the filecontent should not be decoded", filecontent.equals(new String(fileBytes)));
+        assertEquals("the filecontent should not be decoded", filecontent, new String(fileBytes));
         decoder.destroy();
         req.release();
     }
@@ -680,7 +680,7 @@ public class HttpPostRequestDecoderTest {
                 data + "\r\n" +
                 "--" + boundary + "--\r\n";
 
-        req.content().writeBytes(body.getBytes(CharsetUtil.UTF_8.name()));
+        req.content().writeBytes(body.getBytes(CharsetUtil.UTF_8));
         // Create decoder instance to test.
         final HttpPostRequestDecoder decoder = new HttpPostRequestDecoder(inMemoryFactory, req);
         assertFalse(decoder.getBodyHttpDatas().isEmpty());

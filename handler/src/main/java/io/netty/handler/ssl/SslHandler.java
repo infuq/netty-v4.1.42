@@ -1044,11 +1044,9 @@ public class SslHandler extends ByteToMessageDecoder implements ChannelOutboundH
                 in.skipBytes(result.bytesConsumed());
                 out.writerIndex(out.writerIndex() + result.bytesProduced());
 
-                switch (result.getStatus()) {
-                case BUFFER_OVERFLOW:
+                if (result.getStatus() == Status.BUFFER_OVERFLOW) {
                     out.ensureWritable(engine.getSession().getPacketBufferSize());
-                    break;
-                default:
+                } else {
                     return result;
                 }
             }
@@ -1915,7 +1913,7 @@ public class SslHandler extends ByteToMessageDecoder implements ChannelOutboundH
             throw new IllegalStateException();
         }
 
-        return renegotiate(ctx.executor().<Channel>newPromise());
+        return renegotiate(ctx.executor().newPromise());
     }
 
     /**

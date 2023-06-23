@@ -17,6 +17,7 @@ package io.netty.handler.codec.http;
 
 import java.net.URI;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -54,7 +55,7 @@ public class QueryStringEncoderTest {
 
     @Test
     public void testNonDefaultEncoding() throws Exception {
-        QueryStringEncoder e = new QueryStringEncoder("/foo/\u00A5", Charset.forName("UTF-16"));
+        QueryStringEncoder e = new QueryStringEncoder("/foo/\u00A5", StandardCharsets.UTF_16);
         e.addParam("a", "\u00A5");
         Assert.assertEquals("/foo/\u00A5?a=%FE%FF%00%A5", e.toString());
         Assert.assertEquals(new URI("/foo/\u00A5?a=%FE%FF%00%A5"), e.toUri());

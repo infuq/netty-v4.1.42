@@ -52,7 +52,7 @@ public interface ChannelFutureListener extends GenericFutureListener<ChannelFutu
     ChannelFutureListener CLOSE_ON_FAILURE = new ChannelFutureListener() {
         @Override
         public void operationComplete(ChannelFuture future) {
-            System.out.println("@(" + future.hashCode() + ")回调系统的BindFuture");
+//            System.out.println("线程:" + Thread.currentThread().getName() + "@(" + future.hashCode() + ")回调系统的BindFuture");
             if (!future.isSuccess()) {
                 future.channel().close();
             }

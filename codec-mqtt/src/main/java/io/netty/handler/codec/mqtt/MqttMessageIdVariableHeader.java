@@ -43,10 +43,9 @@ public final class MqttMessageIdVariableHeader {
 
     @Override
     public String toString() {
-        return new StringBuilder(StringUtil.simpleClassName(this))
-            .append('[')
-            .append("messageId=").append(messageId)
-            .append(']')
-            .toString();
+        return StringUtil.simpleClassName(this) +
+                '[' +
+                "messageId=" + messageId +
+                ']';
     }
 }

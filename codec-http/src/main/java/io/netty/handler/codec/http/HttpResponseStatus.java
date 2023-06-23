@@ -628,11 +628,9 @@ public class HttpResponseStatus implements Comparable<HttpResponseStatus> {
 
     @Override
     public String toString() {
-        return new StringBuilder(reasonPhrase.length() + 4)
-            .append(codeAsText)
-            .append(' ')
-            .append(reasonPhrase)
-            .toString();
+        return String.valueOf(codeAsText) +
+                ' ' +
+                reasonPhrase;
     }
 
     void encode(ByteBuf buf) {

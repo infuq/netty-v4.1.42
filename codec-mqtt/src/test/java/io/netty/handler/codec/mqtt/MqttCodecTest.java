@@ -611,13 +611,9 @@ public class MqttCodecTest {
                 actual.clientIdentifier());
         assertEquals("MqttConnectPayload UserName mismatch ", expected.userName(), actual.userName());
         assertEquals("MqttConnectPayload Password mismatch ", expected.password(), actual.password());
-        assertTrue(
-                "MqttConnectPayload Password bytes mismatch ",
-                Arrays.equals(expected.passwordInBytes(), actual.passwordInBytes()));
+        assertArrayEquals("MqttConnectPayload Password bytes mismatch ", expected.passwordInBytes(), actual.passwordInBytes());
         assertEquals("MqttConnectPayload WillMessage mismatch ", expected.willMessage(), actual.willMessage());
-        assertTrue(
-                "MqttConnectPayload WillMessage bytes mismatch ",
-                Arrays.equals(expected.willMessageInBytes(), actual.willMessageInBytes()));
+        assertArrayEquals("MqttConnectPayload WillMessage bytes mismatch ", expected.willMessageInBytes(), actual.willMessageInBytes());
         assertEquals("MqttConnectPayload WillTopic mismatch ", expected.willTopic(), actual.willTopic());
     }
 

@@ -82,14 +82,12 @@ public class DefaultSpdyGoAwayFrame implements SpdyGoAwayFrame {
 
     @Override
     public String toString() {
-        return new StringBuilder()
-            .append(StringUtil.simpleClassName(this))
-            .append(StringUtil.NEWLINE)
-            .append("--> Last-good-stream-ID = ")
-            .append(lastGoodStreamId())
-            .append(StringUtil.NEWLINE)
-            .append("--> Status: ")
-            .append(status())
-            .toString();
+        return StringUtil.simpleClassName(this) +
+                StringUtil.NEWLINE +
+                "--> Last-good-stream-ID = " +
+                lastGoodStreamId() +
+                StringUtil.NEWLINE +
+                "--> Status: " +
+                status();
     }
 }

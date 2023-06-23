@@ -34,8 +34,8 @@ public final class HostsFileEntries {
      */
     static final HostsFileEntries EMPTY =
             new HostsFileEntries(
-                    Collections.<String, Inet4Address>emptyMap(),
-                    Collections.<String, Inet6Address>emptyMap());
+                    Collections.emptyMap(),
+                    Collections.emptyMap());
 
     private final Map<String, Inet4Address> inet4Entries;
     private final Map<String, Inet6Address> inet6Entries;

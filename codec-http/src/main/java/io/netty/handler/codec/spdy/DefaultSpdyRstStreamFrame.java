@@ -71,14 +71,12 @@ public class DefaultSpdyRstStreamFrame extends DefaultSpdyStreamFrame
 
     @Override
     public String toString() {
-        return new StringBuilder()
-            .append(StringUtil.simpleClassName(this))
-            .append(StringUtil.NEWLINE)
-            .append("--> Stream-ID = ")
-            .append(streamId())
-            .append(StringUtil.NEWLINE)
-            .append("--> Status: ")
-            .append(status())
-            .toString();
+        return StringUtil.simpleClassName(this) +
+                StringUtil.NEWLINE +
+                "--> Stream-ID = " +
+                streamId() +
+                StringUtil.NEWLINE +
+                "--> Status: " +
+                status();
     }
 }

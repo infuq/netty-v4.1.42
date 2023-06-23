@@ -141,7 +141,7 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
             }
             final ChannelPipeline pipeline = pipeline();
             final ByteBufAllocator allocator = config.getAllocator();
-            System.out.println("线程[" + Thread.currentThread().getName() + "]使用分配器->" + allocator.hashCode());
+            //System.out.println("线程[" + Thread.currentThread().getName() + "]使用分配器->" + allocator.hashCode());
             final RecvByteBufAllocator.Handle allocHandle = recvBufAllocHandle();
             allocHandle.reset(config);
 
@@ -155,61 +155,57 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
 //            System.out.println("线程[" + Thread.currentThread().getName() + "]获取的堆外内存对象的布局如下");
 //            System.out.println(ClassLayout.parseInstance(byteBuf).toPrintable());
 
-            boolean mock = 1 == 1;
-            if (mock) {
-                try {
-                    do {
-                        byteBuf = allocHandle.allocate(allocator);
-                        System.out.println(ClassLayout.parseInstance(byteBuf).toPrintable());
-                        allocHandle.lastBytesRead(doReadBytes(byteBuf));
-                        if (allocHandle.lastBytesRead() <= 0) {
-                            // nothing was read. release the buffer.
-                            byteBuf.release();
-                            byteBuf = null;
-                            close = allocHandle.lastBytesRead() < 0;
-                            if (close) {
-                                // There is nothing left to read as we received an EOF.
-                                readPending = false;
-                            }
-                            break;
-                        }
-
-                        allocHandle.incMessagesRead(1);
-                        readPending = false;
-                        pipeline.fireChannelRead(byteBuf);
+            try {
+                do {
+                    byteBuf = allocHandle.allocate(allocator);
+//                    System.out.println("线程:" + ClassLayout.parseInstance(byteBuf).toPrintable());
+                    allocHandle.lastBytesRead(doReadBytes(byteBuf));
+                    if (allocHandle.lastBytesRead() <= 0) {
+                        // nothing was read. release the buffer.
+                        byteBuf.release();
                         byteBuf = null;
-                    } while (allocHandle.continueReading());
-
-                    allocHandle.readComplete();
-                    pipeline.fireChannelReadComplete();
-
-                    if (close) {
-                        closeOnRead(pipeline);
+                        close = allocHandle.lastBytesRead() < 0;
+                        if (close) {
+                            // There is nothing left to read as we received an EOF.
+                            readPending = false;
+                        }
+                        break;
                     }
-                } catch (Throwable t) {
-                    handleReadException(pipeline, byteBuf, t, close, allocHandle);
-                } finally {
-                    // Check if there is a readPending which was not processed yet.
-                    // This could be for two reasons:
-                    // * The user called Channel.read() or ChannelHandlerContext.read() in channelRead(...) method
-                    // * The user called Channel.read() or ChannelHandlerContext.read() in channelReadComplete(...) method
-                    //
-                    // See https://github.com/netty/netty/issues/2254
-                    if (!readPending && !config.isAutoRead()) {
-                        removeReadOp();
-                    }
+
+                    allocHandle.incMessagesRead(1);
+                    readPending = false;
+                    pipeline.fireChannelRead(byteBuf);
+                    byteBuf = null;
+                } while (allocHandle.continueReading());
+
+                allocHandle.readComplete();
+                pipeline.fireChannelReadComplete();
+
+                if (close) {
+                    closeOnRead(pipeline);
                 }
-
+            } catch (Throwable t) {
+                handleReadException(pipeline, byteBuf, t, close, allocHandle);
+            } finally {
+                // Check if there is a readPending which was not processed yet.
+                // This could be for two reasons:
+                // * The user called Channel.read() or ChannelHandlerContext.read() in channelRead(...) method
+                // * The user called Channel.read() or ChannelHandlerContext.read() in channelReadComplete(...) method
+                //
+                // See https://github.com/netty/netty/issues/2254
+                if (!readPending && !config.isAutoRead()) {
+                    removeReadOp();
+                }
             }
 
 
-
+            // 测试代码
             FastThreadLocalThread current = (FastThreadLocalThread) Thread.currentThread();
             InternalThreadLocalMap internalThreadLocalMap = current.threadLocalMap();
             Object[] indexedVariables = internalThreadLocalMap.getIndexedVariables();
             for (int i = 0; i < indexedVariables.length; i++) {
                 if (indexedVariables[i] != null && indexedVariables[i] instanceof PoolThreadCache) {
-                    System.out.println("线程[" + Thread.currentThread().getName() + "]中存储PoolThreadCache的下标->" + i);
+                    //System.out.println("线程[" + Thread.currentThread().getName() + "]中存储PoolThreadCache的下标->" + i);
                 }
             }
 
