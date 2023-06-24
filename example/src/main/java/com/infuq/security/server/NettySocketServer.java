@@ -46,7 +46,7 @@ public class NettySocketServer {
                         }
                     });
 
-            serverStrap.bind(8081).sync();
+            serverStrap.bind("127.0.0.1", 8081).sync();
             System.out.println("Server start success...");
 
         } catch(Exception e) {
