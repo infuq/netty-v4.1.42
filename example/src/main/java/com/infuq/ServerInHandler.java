@@ -12,7 +12,10 @@ public class ServerInHandler extends SimpleChannelInboundHandler<String> {
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, String msg) {
-        System.out.println("ServerInHandler#channelRead0");
+
+        //System.out.println("ServerInHandler#channelRead0");
+        System.out.println("server receive data:" + msg);
+
         ChannelFuture channelFuture = ctx.writeAndFlush("\r\nServer " + (count++) + " to Client...\r\n");
         channelFuture.addListener(new ChannelFutureListener() {
             @Override

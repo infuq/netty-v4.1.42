@@ -195,6 +195,7 @@ public abstract class HttpObjectDecoder extends ByteToMessageDecoder {
             }
             currentState = State.READ_INITIAL;
         }
+        // 读取请求行
         case READ_INITIAL: try {
             AppendableCharSequence line = lineParser.parse(buffer);
             if (line == null) {
